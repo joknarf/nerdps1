@@ -2,16 +2,16 @@
 [ "$1" = activate ] && awk 'NR>2' $0 && exit 0
 : ${USER:=$USERNAME}
 : ${USER:=$LOGNAME}
-ps1_tmp=/tmp/.pwprompt.$USER
+ps1_tmp=/tmp/.nerdps1.$USER
 # check /tmp space # zsh TMPPREFIX
-head -c 20000 /dev/zero >$ps1_tmp 2>/dev/null || { ps1_tmp=/var/tmp/.pwprompt.$USER; TMPPREFIX=/var/tmp/zsh; }
-# custom settings in tmp pwprompt
+head -c 20000 /dev/zero >$ps1_tmp 2>/dev/null || { ps1_tmp=/var/tmp/.nerdps1.$USER; TMPPREFIX=/var/tmp/zsh; }
+# custom settings in tmp nerdps1
 ( 
     echo ": \${ps1_tmp:=$ps1_tmp}"
     [ "$ps1_powerline" ] && echo "ps1_powerline='$ps1_powerline'"
     [ "$ps1_info" ] && echo "ps1_info='$ps1_info'"
 ) >$ps1_tmp
-# pwprompt code to tmp
+# nerdps1 code to tmp
 cat - >>$ps1_tmp <<'EOF'
 ######## powerline-awk ##########
 # Author: Franck Jouvanceau
@@ -28,6 +28,7 @@ type typeset >/dev/null 2>&1 || alias typeset=local  # ash no typeset
 : ${ps1_exit_colors:="green red"}
 : ${ps1_git_colors:="green yellow/black"}
 : ${ps1_blank_line:=1}
+: ${ps1_url:=https://raw.githubusercontent.com/joknarf/nerdps1/main/nerdps1}
 ps1_style1="(/auto:exit_status (/blue:userhost )/auto:git_branch )/lblack:cwd > | (/lblue/black/blue:info (/blue:time )"
 ps1_style2="(/auto:exit_status (/blue:userhost )/lblack:cwd >/auto:git_branch > | (/lblue/black/blue:info (/blue:time )"
 : ${ps1_powerline:="$ps1_style1"}
@@ -311,14 +312,14 @@ ps1_zshinit() {
 # build profile according to user shell
 ps1_userprofile() {
     typeset profile="$ps1_tmp.profile"
-    typeset pwprompt=". $ps1_tmp"
+    typeset nerdps1=". $ps1_tmp"
     typeset load_custom="[ -r '$profile/.custom' ] && . '$profile/.custom'"
     typeset profilerc="$profile/.rc"
     typeset gprofile=true uprofile=true
     mkdir -p $profile
     [ "$1" = "-g" ] && gprofile=false && shift
     [ "$1" = "-u" ] && uprofile=false && shift
-    [ "$1" = "-p" ] && pwprompt=':' && shift
+    [ "$1" = "-p" ] && nerdps1=':' && shift
     [ "$1" = "-b" ] && ps1_shell=bash && shift || ps1_shell=$(ps1_usershell $1)
     [ "$2" ] && [ -f "$2" ] && cp $2 $profile/.custom
     ps1_user="$1"
@@ -331,7 +332,7 @@ ps1_userprofile() {
                 ;;
         *)   ps1_bashinit >>"$profilerc";;
     esac
-    echo "$load_custom;$pwprompt" >>"$profilerc"
+    echo "$load_custom;$nerdps1" >>"$profilerc"
 }
 
 # sud [-g -u -p -b] user [envfile]
@@ -363,14 +364,18 @@ sudsu() {
 
 sshc() {
     ssh -t "$1" "
-        ps1_tmp=/tmp/.pwprompt.\$USER
-        head -c 20000 /dev/zero >\$ps1_tmp || ps1_tmp=/var/tmp/.pwprompt.\$USER
+        ps1_tmp=/tmp/.nerdps1.\$USER
+        head -c 20000 /dev/zero >\$ps1_tmp || ps1_tmp=/var/tmp/.nerdps1.\$USER
         echo : \\\${ps1_tmp:=\$ps1_tmp} >\$ps1_tmp
         cat - <<'EOF$$' >>\$ps1_tmp
 $(< $ps1_tmp)
 $([ "$2" ] && [ -r "$2" ] && cat "$2")
 EOF$$
         exec bash --init-file <(cat /etc/profile .bash_profile .profile \$ps1_tmp 2>/dev/null)"
+}
+
+sshu() {
+    ssh -t $1 "bash --init-file <(cat /etc/profile .bash_profile .profile 2>/dev/null; curl -s -m 6 $ps1_url)"
 }
 
 ps1_set
