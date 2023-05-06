@@ -1,0 +1,380 @@
+#!/bin/bash
+[ "$1" = activate ] && awk 'NR>2' $0 && exit 0
+: ${USER:=$USERNAME}
+: ${USER:=$LOGNAME}
+ps1_tmp=/tmp/.pwprompt.$USER
+# check /tmp space # zsh TMPPREFIX
+head -c 20000 /dev/zero >$ps1_tmp 2>/dev/null || { ps1_tmp=/var/tmp/.pwprompt.$USER; TMPPREFIX=/var/tmp/zsh; }
+# custom settings in tmp pwprompt
+( 
+    echo ": \${ps1_tmp:=$ps1_tmp}"
+    [ "$ps1_powerline" ] && echo "ps1_powerline='$ps1_powerline'"
+    [ "$ps1_info" ] && echo "ps1_info='$ps1_info'"
+) >$ps1_tmp
+# pwprompt code to tmp
+cat - >>$ps1_tmp <<'EOF'
+######## powerline-awk ##########
+# Author: Franck Jouvanceau
+# Powerline prompt with AWK (bash/zsh/ksh)
+
+type typeset >/dev/null 2>&1 || alias typeset=local  # ash no typeset
+
+# overiddable vars in your env
+: #${ps1_info_eval:='$(echo uid:$(id -u))'}
+: ${ps1_nopw:=0}        # disable powerline symbols :-(
+: ${ps1_info_vars:='client_id ORACLE_SID {VIRTUAL_ENV##*[/\\\\]}'}
+: ${ps1_info:=''}       # var to add variables to info zone  
+: ${ps1_git_status:=1}  # 0 to disable git status
+: ${ps1_exit_colors:="green red"}
+: ${ps1_git_colors:="green yellow/black"}
+: ${ps1_blank_line:=1}
+ps1_style1="(/auto:exit_status (/blue:userhost )/auto:git_branch )/lblack:cwd > | (/lblue/black/blue:info (/blue:time )"
+ps1_style2="(/auto:exit_status (/blue:userhost )/lblack:cwd >/auto:git_branch > | (/lblue/black/blue:info (/blue:time )"
+: ${ps1_powerline:="$ps1_style1"}
+
+#=========================
+[ -x /bin/nawk ] && ps1_awk=nawk || ps1_awk=awk
+
+pwline() {
+    : ${COLUMNS:=$(stty size 2>/dev/null)} # ash no $COLUMNS
+    COLUMNS=${COLUMNS#* }
+    : ${ps1_colors:="blue lblack green yellow/black lblue/black"} # just some defaults
+    $ps1_awk -v pcol="$ps1_colors" -v columns="$COLUMNS" -v nopw="$ps1_nopw" -v kshbug="$ps1_kshbug" '
+    function init_symbols() {
+        if (nopw) {
+            sym[">"]=""; sym[")"]=""; sym["<"]=""; sym["("]=""
+            sep[""]=""; rev[""]=""
+            pwidth = 0
+            return
+        }
+        pwidth=1
+        sym[">"] = ""; sep[">"] = ""; rev[">"]=0 # \ue0b0 \ue0b1
+        sym[")"] = ""; sep[")"] = ""; rev[")"]=0 # \ue0b4 \ue0b5
+        sym["<"] = ""; sep["<"] = ""; rev["<"]=1 # \ue0b2 \ue0b3
+        sym["("] = ""; sep["("] = ""; rev["("]=1 # \ue0b6 \ue0b7
+    }
+    function init_colors() {
+        csi = "\033["
+        c = "black red green yellow blue magenta cyan white"
+        split(c, co)
+        for (i in co) {
+            colors[co[i]] = csi i+29 "m"
+            colors["l"co[i]] = csi i+89 "m"
+            colors["b"co[i]] = csi i+39 "m"
+            colors["bl"co[i]] = csi i+99 "m"
+        }
+        colors["reset_all"] = csi "0m"
+        colors["reset"] = csi "39m"
+        colors["breset"] = csi "49m"
+        colors["wrapoff"] = csi "?7l"
+        colors["wrapon"] = csi "?7h"
+    }
+    function getcols(info,    colinfo, i) {
+        if (info == "") return
+        split(info, colinfo, "/")
+        i=1
+        if (colinfo[i] in sym)
+            symbol = colinfo[i++]
+        #print("\n="info, colinfo[i], i)
+        if (bg) return
+        if (colinfo[i] in colors)
+            bg = colinfo[i]
+        fg = colinfo[i+1] == "" ? "lwhite" : colinfo[i+1]
+        sepcol = colinfo[i+2]
+    }
+    function getbgfg(i, info) {
+        bg = ""
+        getcols(info)
+        getcols(pcols[i])
+    }
+    function gettext(info) {
+        sub("[^:]*:", "", info)
+        gsub("[|]+[|]", "|", info)
+        gsub("^[|]|[|]$","", info)
+        gsub("[|]", " | ", info)
+        return info
+    }
+    BEGIN {
+        pw_sep = ""
+        pw_rsep = ""
+        init_colors()
+        init_symbols()
+        split(pcol, pcols, " ")
+        printf("\r%s%s", colors["wrapoff"], colors["black"])
+        #pw_symbol = sprintf("%c", strtonum("0xE0B0"))
+        for (i=1;i<ARGC;i++) {
+            text=ARGV[i]
+            if (text=="|") {
+                printf("%s", colors["black"])
+                emptywidth = columns - width -1 # avoid last column for resize
+                for(j=ARGC-1;j>i;j--) {
+                    text = gettext(ARGV[j])
+                    if (text == "") continue
+                    gsub("^ +| +$", "", text)
+                    if (text in sym)
+                        if (emptywidth - length(gettext(ARGV[j-1])) > 3+pwidth)
+                            emptywidth--
+                        else
+                            delete ARGV[j]
+                    else if (emptywidth - length(text) > 2+pwidth)
+                        emptywidth -= length(text) + 2+pwidth
+                    else
+                        delete ARGV[j]
+                }
+                if (kshbug=="1") {printf("\n"); system("tput cuf " width+emptywidth)}
+                else for(j=0;j<emptywidth;j++) printf(" ") # printf("%*s", emptywidth, " ") not busybox compatible
+                continue
+            }
+            split(text, colinfo, ":")
+            getbgfg(i, colinfo[1])
+            text = gettext(text)
+            if (! text) continue
+            gsub("^ +| +$", "", text)
+            sp = " "
+            if (text == symbol) { bg="reset"; width+=pwidth }
+            else if (text == "") { text="";sp=""; width+=pwidth }
+            else width += length(text) + 2+pwidth
+            gsub("[|]", colors[sepcol] sep[symbol] colors[fg], text)
+
+            if (rev[symbol]) {
+                printf("%s", colors[bg] sym[symbol])
+                if (text!=symbol) 
+                    printf("%s", colors[fg] colors["b"bg] sp text sp colors[bg])
+            } else {
+                printf("%s", colors["b"bg] sym[symbol])
+                if (text!=symbol)
+                    printf("%s", colors[fg] sp text sp colors["reset_all"] colors[bg] colors["b"bg])
+            }
+        }
+        #if (! rev)
+        #    printf("%s", colors[bg] colors["breset"] symbol)
+        printf("%s%s\n", colors["reset_all"], colors["wrapoff"])
+    }' "$@"
+}
+
+
+ps1_git_branch() {
+    typeset git_head i git_branch
+    git_head=.git/HEAD
+    for i in . . . . . .;do
+        [ -r "$git_head" ] && break
+        git_head="../$git_head"
+    done
+    [ ! -r "$git_head" ] && echo ':' && return
+    git_branch=$(sed -e 's#.*/##' "$git_head")
+    [ "$ps1_git_status" = 0 ] && echo "${ps1_git_colors% *}:$git_branch" && return
+    [[ "$(git status -uno --no-ahead-behind 2> /dev/null |tail -n1)" = "nothing to commit"* ]] && echo "${ps1_git_colors% *}:$git_branch" || echo "${ps1_git_colors#* }:$git_branch"
+    #git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'
+}
+
+ps1_userhost() {
+    typeset hostname
+    hostname=$(uname -n)
+    echo $USER@${hostname%%.*}
+}
+
+ps1_cwd() {
+    typeset spwd cols
+    spwd=$PWD
+    cols=${COLUMNS:-80}
+    [[ $PWD = $HOME* ]] && spwd="~${PWD#$HOME}"
+    [ ${#spwd} -gt $(($cols-30)) ] && spwd="${spwd:0:7}...${spwd:$((${#spwd}-$cols-40))}"
+    echo "$spwd"
+}
+
+ps1_exit_status() {
+    [ "$1" = 0 ] && echo "${ps1_exit_colors% *}:"|| echo "${ps1_exit_colors#* }:$1"
+}
+
+ps1_info() {
+    eval echo -n \""$ps1_info_eval"\"
+    for i in $ps1_info_vars $ps1_info;do
+        eval echo -n \"'|$'"$i"\"
+    done
+}
+
+ps1_uidprompt() {
+    [ "$USER" = root ] && echo '#' || echo '$'    
+}
+
+ps1_prompt() {
+    if [ "$BASH" ];then
+        shell=bash
+        prompt='\$'
+        pre='\[\033]0;\\h\007'
+        post='\]'
+    elif [ "$ZSH_VERSION" ];then
+        shell=zsh
+        prompt='%(!.#.$)'
+        pre='%{\033]0;%m\007'
+        post='%}'
+    else
+        pre='\033]0;$HOSTNAME\007'
+        shell=other
+        prompt='$(ps1_uidprompt)'
+    fi
+    echo -ne "$pre"'$(pwline '
+    $ps1_awk -v shell="$shell" 'BEGIN {
+        cmd["exit_status"] = "$(ps1_exit_status $?)"
+        if (shell == "bash") {
+            cmd["userhost"] = "\\u@\\h"
+            cmd["cwd"] = "\\w"
+            cmd["time"] = "\\A"
+            cmd["prompt"] = "\\$"
+        } else if (shell == "zsh") {
+            cmd["userhost"] = "$(print -P %n@%m)"
+            cmd["time"] = "$(print -P %T)"
+            cmd["prompt"] = "%(!.#.$)"
+        } else 
+            cmd["time"] = "$(date +%H:%M)"
+        nb = split(ARGV[1], segments, " ")
+        for (i=1; i<=nb; i++) {
+            n = split(segments[i], info, ":")
+            if (n==1) {
+                printf("\"%s\" ", info[1])
+                continue
+            }
+            sep=":"
+            if (info[1]~/auto/) { sep = ""; sub("auto","",info[1]) }
+            if (info[2] in cmd)
+                printf("\"%s%s%s\" ", info[1], sep, cmd[info[2]])
+            else
+                printf("\"%s%s$(ps1_%s)\" ", info[1], sep, info[2])
+        }
+    }' "$@"
+    echo ")$post"
+    echo "$prompt "
+}
+
+# create powerline prompt
+ps1_set() {
+    VIRTUAL_ENV_DISABLE_PROMPT=1
+    if [ "$BASH" ];then
+        shopt -s checkwinsize 2>/dev/null
+        : ${PROMPT_DIRTRIM:=5}
+    elif [ "$ZSH_VERSION" ];then
+        setopt PROMPT_SUBST
+        setopt sh_word_split # for i in $var
+    else
+        [[ "$BB_ASH_VERSION" ]] && ps1_kshbug=0
+        [[ "$KSH_VERSION" ]] || : ${ps1_kshbug:=1}
+        [[ "$KSH_VERSION" = *2012* ]] && : ${ps1_kshbug:=1}
+    fi
+    PS1_OLD="$PS1"
+    PS1=$(ps1_prompt "$ps1_powerline")
+    [ "$ps1_blank_line" = 1 ] && PS1="
+$PS1"
+    return 0
+}
+
+ps1_restore() {
+    PS1="$PS1_OLD"
+}
+
+#=========
+
+ps1_usershell() {
+    typeset shell=$(getent passwd "$1")
+    shell=${shell##*:}
+    echo ${shell##*/}
+}
+
+ps1_bashinit() {
+    echo 'cd
+    $_gprof && . /etc/profile
+    $_uprof && for i in .bash_profile .bash_login .profile;do
+        [ -r $i ] && . ./$i && break
+    done
+    '
+}
+
+ps1_kshinit() {
+    echo 'cd
+    typeset +x ENV
+    ENV=~/.kshrc
+    $_gprof && . /etc/profile
+    [ -r .profile ] && $_uprof && . ./.profile
+    [ -r "$ENV" ] && $_uprof && . $ENV
+    '
+}
+
+ps1_zshinit() {
+    echo 'cd
+    ZDOTDIR=~/
+    for i in zshenv zprofile zshrc;do
+        $_gprof && . /etc/zsh/$i
+        [ -r .$i ] && $_uprof && . ./.$i
+    done
+    '
+}
+
+# build profile according to user shell
+ps1_userprofile() {
+    typeset profile="$ps1_tmp.profile"
+    typeset pwprompt=". $ps1_tmp"
+    typeset load_custom="[ -r '$profile/.custom' ] && . '$profile/.custom'"
+    typeset profilerc="$profile/.rc"
+    typeset gprofile=true uprofile=true
+    mkdir -p $profile
+    [ "$1" = "-g" ] && gprofile=false && shift
+    [ "$1" = "-u" ] && uprofile=false && shift
+    [ "$1" = "-p" ] && pwprompt=':' && shift
+    [ "$1" = "-b" ] && ps1_shell=bash && shift || ps1_shell=$(ps1_usershell $1)
+    [ "$2" ] && [ -f "$2" ] && cp $2 $profile/.custom
+    ps1_user="$1"
+    echo "_gprof=$gprofile;_uprof=$uprofile" > "$profilerc"
+    case "$ps1_shell" in
+        ksh) ps1_kshinit >>"$profilerc";;
+        zsh) mv $profilerc "$profile/.zshrc"
+                profilerc="$profile/.zshrc"
+                ps1_zshinit >>"$profilerc"
+                ;;
+        *)   ps1_bashinit >>"$profilerc";;
+    esac
+    echo "$load_custom;$pwprompt" >>"$profilerc"
+}
+
+# sud [-g -u -p -b] user [envfile]
+sud() {
+    typeset profile="$ps1_tmp.profile"
+    typeset profilerc="$profile/.rc"
+    ps1_userprofile "$@"
+    case "$ps1_shell" in
+        ksh) sudo -u "$ps1_user" -H ksh -c "ENV=$profilerc exec ksh -i";;
+        zsh) profilerc="$profile/.zshrc";sudo -u "$ps1_user" -H zsh --no-rcs -c "ZDOTDIR=$profile zsh -i";;
+        *)   sudo -u "$ps1_user" -H bash --init-file "$profilerc";;
+    esac
+    rm $profilerc $profile/.custom 2>/dev/null
+    rmdir $profile 2>/dev/null
+}
+
+sudsu() {
+    typeset profile="$ps1_tmp.profile"
+    typeset profilerc="$profile/.rc"
+    ps1_userprofile "$@"
+    case "$ps1_shell" in
+        ksh) sudo su - "$ps1_user" -c "ENV=$profilerc exec ksh -i";;
+        zsh) profilerc="$profile/.zshrc";sudo -u "$ps1_user" -H zsh -c "ZDOTDIR=$profile zsh -i";;
+        *)   sudo su - "$ps1_user" -c "exec bash --init-file $profilerc";;
+    esac
+    rm $profilerc $profile/.custom 2>/dev/null
+    rmdir $profile 2>/dev/null
+}
+
+sshc() {
+    ssh -t "$1" "
+        ps1_tmp=/tmp/.pwprompt.\$USER
+        head -c 20000 /dev/zero >\$ps1_tmp || ps1_tmp=/var/tmp/.pwprompt.\$USER
+        echo : \\\${ps1_tmp:=\$ps1_tmp} >\$ps1_tmp
+        cat - <<'EOF$$' >>\$ps1_tmp
+$(< $ps1_tmp)
+$([ "$2" ] && [ -r "$2" ] && cat "$2")
+EOF$$
+        exec bash --init-file <(cat /etc/profile .bash_profile .profile \$ps1_tmp 2>/dev/null)"
+}
+
+ps1_set
+
+####### end powerline-awk ########
+EOF
+. $ps1_tmp
