@@ -217,6 +217,11 @@ ps1_freemem() {
     }' /proc/meminfo
 }
 
+ps1_loadavg() {
+    typeset load=$(< /proc/loadavg)
+    echo ${load%% *}
+}
+
 ps1_prompt() {
     if [ "$BASH" ];then
         shell=bash
