@@ -29,6 +29,8 @@ $ psudosu user [myenvfile]
 * psudosu uses sudo su - user command
 The login shell will be the user shell (must be bash/ksh/zsh)
 
+![image](https://user-images.githubusercontent.com/10117818/236661556-becd0184-4cb1-4b14-ab6c-5fc5c2f16f2e.png)
+
 ## persistent prompt across ssh connection
 
 Using functions pssh and psshu you can connect to remote servers with your nerdps1 prompt, and even add your local environment file to source after user profile.
@@ -38,3 +40,5 @@ $ psshu user@remote [myenvfile]
 ```
 * pssh will use local nerdps1 to make a copy to remote
 * psshu will use `$ps1_url` to download nerdps1
+
+![image](https://user-images.githubusercontent.com/10117818/236662496-00aafc19-a253-4a2d-a356-df900b28324c.png)

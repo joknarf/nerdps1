@@ -332,8 +332,9 @@ ps1_userprofile() {
     echo "$load_custom;$nerdps1" >>"$profilerc"
 }
 
-# sud [-g -u -p -b] user [envfile]
-sud() {
+# psudo [-g -u -p -b] user [envfile]
+# sudo login to user using sudo -u $user
+psudo() {
     typeset profile="$ps1_tmp.profile"
     typeset profilerc="$profile/.rc"
     ps1_userprofile "$@"
@@ -346,7 +347,8 @@ sud() {
     rmdir $profile 2>/dev/null
 }
 
-sudsu() {
+# sudo login to user using sudo su - $user
+psudosu() {
     typeset profile="$ps1_tmp.profile"
     typeset profilerc="$profile/.rc"
     ps1_userprofile "$@"
@@ -359,7 +361,8 @@ sudsu() {
     rmdir $profile 2>/dev/null
 }
 
-sshc() {
+# ssh connect bash copy nerdps1 from local
+pssh() {
     ssh -t "$1" "
         ps1_tmp=/tmp/.nerdps1.\$USER
         head -c 20000 /dev/zero >\$ps1_tmp || ps1_tmp=/var/tmp/.nerdps1.\$USER
@@ -371,7 +374,8 @@ EOF$$
         exec bash --init-file <(cat /etc/profile .bash_profile .profile \$ps1_tmp 2>/dev/null)"
 }
 
-sshu() {
+# ssh connect bash get nerdps1 from $ps1_url
+psshu() {
     ssh -t $1 "bash --init-file <(cat /etc/profile .bash_profile .profile 2>/dev/null; curl -s -m 6 $ps1_url)"
 }
 
