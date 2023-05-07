@@ -195,6 +195,28 @@ ps1_uidprompt() {
     [ "$USER" = root ] && echo '#' || echo '$'    
 }
 
+ps1_freemem() {
+    awk 'BEGIN {
+        split("K M G T P E Z Y", suff)
+    }
+    /MemAvailable:|MemFree:/ {
+        free = $2+0
+        if (free<100*1024) color = "red"
+        else if (free<300*1024) color = "yellow/black"
+        else color = "lblack"
+        for(i=1;i<=length(suff);i++) {
+            if (free > 1024) free/=1024
+            else break
+        }
+        if (free >= 100) free = sprintf("%s:%.0f%s", color, free, suff[i]);
+        else if (free>=10) free = sprintf("%s:%.1f%s", color, free, suff[i]);
+        else free=sprintf("%s%.2f%s", color, free, suff[i]);
+    }
+    END {
+        print(free)
+    }' /proc/meminfo
+}
+
 ps1_prompt() {
     if [ "$BASH" ];then
         shell=bash
