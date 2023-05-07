@@ -97,8 +97,6 @@ pwline() {
         return info
     }
     BEGIN {
-        pw_sep = ""
-        pw_rsep = ""
         init_colors()
         init_symbols()
         split(pcol, pcols, " ")
@@ -148,9 +146,7 @@ pwline() {
                     printf("%s", colors[fg] sp text sp colors["reset_all"] colors[bg] colors["b"bg])
             }
         }
-        #if (! rev)
-        #    printf("%s", colors[bg] colors["breset"] symbol)
-        printf("%s%s\n", colors["reset_all"], colors["wrapoff"])
+        printf("%s%s\n", colors["reset_all"], colors["wrapon"])
     }' "$@"
 }
 
