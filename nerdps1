@@ -196,7 +196,7 @@ ps1_uidprompt() {
 }
 
 ps1_freemem() {
-    [ -r /proc/meminfo ] || return
+    [ ! -r /proc/meminfo ] && echo "black:" && return
     awk 'BEGIN {
         split("K M G T P E Z Y", suff)
     }
