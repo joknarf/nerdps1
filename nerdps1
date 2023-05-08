@@ -381,9 +381,9 @@ psudosu() {
     typeset profilerc="$profile/.rc"
     ps1_userprofile "$@"
     case "$ps1_shell" in
-        ksh) sudo su - "$ps1_user" -c "ENV=$profilerc exec ksh -i";;
-        zsh) profilerc="$profile/.zshrc";sudo -u "$ps1_user" -H zsh -c "ZDOTDIR=$profile zsh -i";;
-        *)   sudo su - "$ps1_user" -c "exec bash --init-file $profilerc";;
+        ksh) sudo su - "$ps1_user" -P -c "ENV=$profilerc exec ksh -i";;
+        zsh) profilerc="$profile/.zshrc";sudo su - "$ps1_user" -P -c "ZDOTDIR=$profile zsh -i";;
+        *)   sudo su - "$ps1_user" -P -c "exec bash --init-file $profilerc";;
     esac
     rm $profilerc $profile/.custom 2>/dev/null
     rmdir $profile 2>/dev/null
