@@ -300,7 +300,7 @@ ps1_restore() {
 #=========
 
 ps1_usershell() {
-    typeset shell=$(getent passwd "$1")
+    typeset shell=$(getent passwd "$1" 2>/dev/null)
     shell=${shell##*:}
     echo ${shell##*/}
 }
@@ -335,27 +335,28 @@ ps1_zshinit() {
 }
 
 # build profile according to user shell
-ps1_userprofile() {
+ps1_login() {
     typeset profile="$ps1_tmp.profile"
     typeset nerdps1=". $ps1_tmp"
     typeset load_custom="[ -r '$profile/.custom' ] && . '$profile/.custom'"
-    typeset profilerc="$profile/.rc"
+    typeset profilerc="$profile/.zshrc" # name for zsh
     typeset gprofile=true uprofile=true
     mkdir -p $profile
     [ "$1" = "-g" ] && gprofile=false && shift
     [ "$1" = "-u" ] && uprofile=false && shift
     [ "$1" = "-p" ] && nerdps1=':' && shift
     [ "$1" = "-b" ] && ps1_shell=bash && shift || ps1_shell=$(ps1_usershell $1)
-    [ "$2" ] && [ -f "$2" ] && cp $2 $profile/.custom
+    [ "$2" ] && [ -r "$2" ] && cp $2 $profile/.custom
     ps1_user="$1"
     echo "_gprof=$gprofile;_uprof=$uprofile" > "$profilerc"
     case "$ps1_shell" in
-        ksh) ps1_kshinit >>"$profilerc";;
-        zsh) mv $profilerc "$profile/.zshrc"
-                profilerc="$profile/.zshrc"
-                ps1_zshinit >>"$profilerc"
-                ;;
-        *)   ps1_bashinit >>"$profilerc";;
+        ksh) ps1_kshinit >>"$profilerc"
+             echo "ENV=$profilerc exec ksh -i";;
+        zsh) ps1_zshinit >>"$profilerc"   
+             echo "ZDOTDIR=$profile exec zsh -di";;
+        *)   ps1_bashinit >>"$profilerc"
+             echo "exec bash --init-file $profilerc"
+             ;;
     esac
     echo "$load_custom;$nerdps1" >>"$profilerc"
 }
@@ -365,26 +366,8 @@ ps1_userprofile() {
 psudo() {
     typeset profile="$ps1_tmp.profile"
     typeset profilerc="$profile/.rc"
-    ps1_userprofile "$@"
-    case "$ps1_shell" in
-        ksh) sudo -u "$ps1_user" -H ksh -c "ENV=$profilerc exec ksh -i";;
-        zsh) profilerc="$profile/.zshrc";sudo -u "$ps1_user" -H zsh --no-rcs -c "ZDOTDIR=$profile zsh -i";;
-        *)   sudo -u "$ps1_user" -H bash --init-file "$profilerc";;
-    esac
-    rm $profilerc $profile/.custom 2>/dev/null
-    rmdir $profile 2>/dev/null
-}
-
-# sudo login to user using sudo su - $user
-psudosu() {
-    typeset profile="$ps1_tmp.profile"
-    typeset profilerc="$profile/.rc"
-    ps1_userprofile "$@"
-    case "$ps1_shell" in
-        ksh) sudo su - "$ps1_user" -P -c "ENV=$profilerc exec ksh -i";;
-        zsh) profilerc="$profile/.zshrc";sudo su - "$ps1_user" -P -c "ZDOTDIR=$profile zsh -i";;
-        *)   sudo su - "$ps1_user" -P -c "exec bash --init-file $profilerc";;
-    esac
+    ps1_user="$*";ps1_user=${ps1_user##*-[a-z] };ps1_user=${ps1_user% *}
+    sudo -u "$ps1_user" -H sh -c "$(ps1_login "$@")"
     rm $profilerc $profile/.custom 2>/dev/null
     rmdir $profile 2>/dev/null
 }
@@ -399,7 +382,8 @@ pssh() {
 $(< $ps1_tmp)
 $([ "$2" ] && [ -r "$2" ] && cat "$2")
 EOF$$
-        exec bash --init-file <(cat /etc/profile .bash_profile .profile \$ps1_tmp 2>/dev/null)"
+        . \$ps1_tmp
+        exec sh -c \"\$(ps1_login \$USER)\""
 }
 
 # ssh connect bash get nerdps1 from $ps1_url
