@@ -388,7 +388,7 @@ EOF$$
 
 # ssh connect bash get nerdps1 from $ps1_url
 psshu() {
-    ssh -t $1 "bash --init-file <(cat /etc/profile .bash_profile .profile 2>/dev/null; curl -s -m 6 $ps1_url)"
+    ssh -t $1 ". <(curl -Ls -m 6 $ps1_url); exec sh -c \"\$(ps1_login \$USER)\""
 }
 
 ps1_set
