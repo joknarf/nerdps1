@@ -36,7 +36,8 @@ Using functions pssh and psshu you can connect to remote servers with your nerdp
 $ pssh user@remote [myenvfile]
 $ psshu user@remote [myenvfile]
 ```
-* pssh will use local nerdps1 to make a copy to remote, shell is remote user shell
-* psshu will use `$ps1_url` to download nerdps1. The remote shell is bash (not necessarily the remote user shell)
+* pssh will use local nerdps1 to make a copy to remote.
+* psshu will use `$ps1_url` to download nerdps1.
+shell is remote user shell
 
 ![image](https://user-images.githubusercontent.com/10117818/236662496-00aafc19-a253-4a2d-a356-df900b28324c.png)
