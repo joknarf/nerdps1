@@ -20,24 +20,27 @@ $ . <(curl -sL https://shorturl.at/cjtzE)
 
 ## persistent prompt across sudo
 
-Using functions psudo you can login to other users keeping your nerdps1 prompt, and even add your environment file to source after user profile.
+Using functions psudo you can login to other users keeping your nerdps1 prompt, and even add your environment file to source after user profile is loaded.  
+* `psudo` is reproducing full login of user according to its shell (/etc/profile .profile ...) and adds the nerdps1 and your optional custom env file
 ```shell
 $ psudo user [myenvfile]
 ```
-* psudo uses `sudo -u user` command
+* psudo uses `sudo -u user` command  
 The login shell will be the user shell (must be one of bash/ksh/zsh)
 
 ![image](https://user-images.githubusercontent.com/10117818/236661556-becd0184-4cb1-4b14-ab6c-5fc5c2f16f2e.png)
 
 ## persistent prompt across ssh connection
 
-Using functions pssh and psshu you can connect to remote servers with your nerdps1 prompt, and even add your local environment file to source after user profile.
+Using functions pssh and psshu you can connect to remote servers with your nerdps1 prompt, and even add your local environment file to source after user profile.  
+* `pssh/psshu` is reproducing full login of user according to its shell (/etc/profile .profile ...) and adds the nerdps1 and your optional custom env file
+
 ```shell
 $ pssh user@remote [myenvfile]
 $ psshu user@remote [myenvfile]
 ```
 * pssh will use local nerdps1 to make a copy to remote.
-* psshu will use `$ps1_url` to download nerdps1.
-shell is remote user shell
+* psshu will use `$ps1_url` to download nerdps1.  
+Invocated shell is remote user shell (bash/ksh/zsh)
 
 ![image](https://user-images.githubusercontent.com/10117818/236662496-00aafc19-a253-4a2d-a356-df900b28324c.png)
