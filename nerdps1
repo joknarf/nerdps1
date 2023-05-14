@@ -2,12 +2,17 @@
 [ "$1" = activate ] && awk 'NR>2' $0 && exit 0
 : ${USER:=$USERNAME}
 : ${USER:=$LOGNAME}
+TMPDIR=/tmp
 ps1_tmp=/tmp/.nerdps1.$USER
 # check /tmp space # zsh TMPPREFIX
-head -c 20000 /dev/zero >$ps1_tmp 2>/dev/null || { ps1_tmp=/var/tmp/.nerdps1.$USER; TMPPREFIX=/var/tmp/zsh; }
+head -c 20000 /dev/zero >$ps1_tmp 2>/dev/null || {
+    export TMPPREFIX=/var/tmp/zsh;
+    export TMPDIR=/var/tmp
+}
+ps1_tmp=$TMPDIR/.nerdps1.$USER
 # custom settings in tmp nerdps1
 ( 
-    echo ": \${ps1_tmp:=$ps1_tmp}"
+    echo "ps1_tmp=$ps1_tmp;TMPDIR=$TMPDIR"
     [ "$ps1_powerline" ] && echo "ps1_powerline='$ps1_powerline'"
     [ "$ps1_info" ] && echo "ps1_info='$ps1_info'"
 ) >$ps1_tmp
@@ -197,25 +202,26 @@ ps1_uidprompt() {
 
 ps1_freemem() {
     [ ! -r /proc/meminfo ] && echo "black:" && return
-    awk 'BEGIN {
-        split("K M G T P E Z Y", suff)
-    }
-    /MemAvailable:|MemFree:/ {
-        free = $2+0
-        if (free<100*1024) color = "red"
-        else if (free<300*1024) color = "yellow/black"
-        else color = "lblack"
-        for(i=1;i<=length(suff);i++) {
-            if (free > 1024) free/=1024
-            else break
+    awk '
+        /MemAvailable:/ { avail = $2 }
+        /Buffer:|Cached:/ { free -= $2 }
+        /MemFree:/ { free += $2 }
+        END {
+            split("K M G T P E Z Y", suff)
+            if (avail) free = avail
+            if (free<100*1024) color = "red"
+            else if (free<300*1024) color = "yellow/black"
+            else color = "lblack"
+            for(i=1;i<=length(suff);i++) {
+                if (free > 1024) free/=1024
+                else break
+            }
+            if (free >= 100) free = sprintf("%s:%.0f%s", color, free, suff[i]);
+            else if (free>=10) free = sprintf("%s:%.1f%s", color, free, suff[i]);
+            else free=sprintf("%s:%.2f%s", color, free, suff[i]);
+	    print(free)
         }
-        if (free >= 100) free = sprintf("%s:%.0f%s", color, free, suff[i]);
-        else if (free>=10) free = sprintf("%s:%.1f%s", color, free, suff[i]);
-        else free=sprintf("%s:%.2f%s", color, free, suff[i]);
-    }
-    END {
-        print(free)
-    }' /proc/meminfo
+    ' /proc/meminfo
 }
 
 ps1_loadavg() {
@@ -336,7 +342,6 @@ ps1_kshinit() {
     [ -r "$ENV" ] && $_uprof && . $ENV
     unalias typeset
     unalias readonly
-    unset -f _typeset
     '
 }
 
@@ -353,39 +358,38 @@ ps1_zshinit() {
 
 # build profile according to user shell
 ps1_login() {
-    typeset profile="$ps1_tmp.profile"
+    typeset profdir="$TMPDIR/.nerdps1.$USER.profile"
+    mkdir -p $profdir
+    [[ $ps1_tmp != *.$USER ]] && cp $ps1_tmp.profile/.nerdrc $profdir 2>/dev/null
     typeset nerdps1=". $ps1_tmp"
-    typeset load_custom="[ -r '$profile/.custom' ] && . '$profile/.custom'"
+    typeset load_custom="[ -r '$profdir/.nerdrc' ] && . '$profdir/.nerdrc'"
     typeset gprofile=true uprofile=true
-    mkdir -p $profile
     [ "$1" = "-g" ] && gprofile=false && shift
     [ "$1" = "-u" ] && uprofile=false && shift
     [ "$1" = "-p" ] && nerdps1=':' && shift
     [ "$1" = "-b" ] && ps1_shell=bash && shift || ps1_shell=$(ps1_usershell $1)
-    [ "$2" ] && [ -r "$2" ] && cp $2 $profile/.custom
+    [ -r ~/.nerdrc ] && cp ~/.nerdrc $profdir
+    [ "$2" ] && [ -r "$2" ] && cp $2 $profdir/.nerdrc
     ps1_user="$1"
-    echo "_gprof=$gprofile;_uprof=$uprofile" > "$profile/.rc"
-    ln -s .rc $profile/.zshrc 2>/dev/null
+    echo "_gprof=$gprofile;_uprof=$uprofile" > "$profdir/.rc"
+    ln -s .rc $profdir/.zshrc 2>/dev/null
     case "$ps1_shell" in
-        ksh) ps1_kshinit >>"$profile/.rc"
-             echo "ENV=$profile/.rc exec ksh -i";;
-        zsh) ps1_zshinit >>"$profile/.rc"  
-             echo "ZDOTDIR=$profile exec zsh -di";;
-        *)   ps1_bashinit >>"$profile/.rc"
-             echo "exec bash --init-file $profile/.rc"
+        ksh) ps1_kshinit >>"$profdir/.rc"
+             echo "ENV=$profdir/.rc exec ksh -i";;
+        zsh) ps1_zshinit >>"$profdir/.rc"  
+             echo "ZDOTDIR=$profdir exec zsh -di";;
+        *)   ps1_bashinit >>"$profdir/.rc"
+             echo "exec bash --init-file $profdir/.rc"
              ;;
     esac
-    echo "$load_custom;$nerdps1" >>"$profile/.rc"
+    echo "$load_custom;$nerdps1" >>"$profdir/.rc"
 }
 
 # psudo [-g -u -p -b] user [envfile]
 # sudo login to user using sudo -u $user
 psudo() {
-    typeset profile="$ps1_tmp.profile"
     ps1_user="$*";ps1_user=${ps1_user##*-[a-z] };ps1_user=${ps1_user% *}
     sudo -u "$ps1_user" -H sh -c "$(ps1_login "$@")"
-    rm $profile/.rc $profile/.zshrc $profile/.custom 2>/dev/null
-    rmdir $profile 2>/dev/null
 }
 
 # ssh connect bash copy nerdps1 from local
@@ -394,16 +398,20 @@ pssh() {
     for i in "$@";do [[ $i = -* ]] || break;loginopts="$loginopts $i";shift;done
     remote=$1
     shift
+    [ -r ~/.nerdrc ] && custom=~/.nerdrc
     [ "$1" ] && [ -r "$1" ] && custom=$1 && shift
     ssh -t "$remote" "$@" "
+        TMPDIR=/tmp
         ps1_tmp=/tmp/.nerdps1.\$USER
-        head -c 20000 /dev/zero >\$ps1_tmp || { ps1_tmp=/var/tmp/.nerdps1.\$USER; export TMPDIR=/var/tmp; }
-        echo : \\\${ps1_tmp:=\$ps1_tmp} >\$ps1_tmp
+        head -c 20000 /dev/zero >\$ps1_tmp ||export TMPDIR=/var/tmp
+        ps1_tmp=\$TMPDIR/.nerdps1.\$USER
+        echo : ps1_tmp=\$ps1_tmp;TMPDIR=\$TMPDIR >\$ps1_tmp
         cat - <<'EOF$$' >>\$ps1_tmp
 $(< $ps1_tmp)
 EOF$$
         . \$ps1_tmp
-        cat - <<'EOF$$' >>\$ps1_tmp
+	mkdir -p \$ps1_tmp.profile
+        cat - <<'EOF$$' >\$ps1_tmp.profile/.nerdrc
 $([ "$custom" ] && cat "$custom")
 EOF$$
         exec sh -c \"\$(ps1_login $loginopts \$USER)\"
