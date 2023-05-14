@@ -365,11 +365,11 @@ ps1_login() {
     [ "$2" ] && [ -r "$2" ] && cp $2 $profile/.custom
     ps1_user="$1"
     echo "_gprof=$gprofile;_uprof=$uprofile" > "$profile/.rc"
+    ln -s .rc $profile/.zshrc 2>/dev/null
     case "$ps1_shell" in
         ksh) ps1_kshinit >>"$profile/.rc"
              echo "ENV=$profile/.rc exec ksh -i";;
         zsh) ps1_zshinit >>"$profile/.rc"  
-             ln -s .rc $profile/.zshrc 
              echo "ZDOTDIR=$profile exec zsh -di";;
         *)   ps1_bashinit >>"$profile/.rc"
              echo "exec bash --init-file $profile/.rc"
@@ -390,21 +390,42 @@ psudo() {
 
 # ssh connect bash copy nerdps1 from local
 pssh() {
-    ssh -t "$1" "
+    typeset loginopts remote custom
+    for i in "$@";do [[ $i = -* ]] || break;loginopts="$loginopts $i";shift;done
+    remote=$1
+    shift
+    [ "$1" ] && [ -r "$1" ] && custom=$1 && shift
+    ssh -t "$remote" "$@" "
         ps1_tmp=/tmp/.nerdps1.\$USER
-        head -c 20000 /dev/zero >\$ps1_tmp || ps1_tmp=/var/tmp/.nerdps1.\$USER
+        head -c 20000 /dev/zero >\$ps1_tmp || { ps1_tmp=/var/tmp/.nerdps1.\$USER; export TMPDIR=/var/tmp; }
         echo : \\\${ps1_tmp:=\$ps1_tmp} >\$ps1_tmp
         cat - <<'EOF$$' >>\$ps1_tmp
 $(< $ps1_tmp)
-$([ "$2" ] && [ -r "$2" ] && cat "$2")
 EOF$$
         . \$ps1_tmp
-        exec sh -c \"\$(ps1_login \$USER)\""
+        cat - <<'EOF$$' >>\$ps1_tmp
+$([ "$custom" ] && cat "$custom")
+EOF$$
+        exec sh -c \"\$(ps1_login $loginopts \$USER)\"
+    "
 }
 
 # ssh connect bash get nerdps1 from $ps1_url
 psshu() {
-    ssh -t $1 ". <(curl -Ls -m 6 $ps1_url); exec sh -c \"\$(ps1_login \$USER)\""
+    typeset loginopts remote custom
+    for i in "$@";do [[ $i = -* ]] || break;loginopts="$loginopts $i";shift;done
+    remote=$1
+    shift
+    [ "$1" ] && [ -r "$1" ] && custom=$1 && shift
+    ssh -t $remote "$@" "
+        ps1_tmp=/tmp/.nerdps1.\$USER
+        head -c 20000 /dev/zero >\$ps1_tmp || { ps1_tmp=/var/tmp/.nerdps1.\$USER; export TMPDIR=/var/tmp; }
+        . <(curl -Ls -m 6 $ps1_url)
+        cat - <<'EOF$$' >>\$ps1_tmp
+$([ "$custom" ] && cat "$custom")
+EOF$$
+        exec sh -c \"\$(ps1_login $loginopts \$USER)\"
+    "
 }
 
 ps1_set
