@@ -69,6 +69,10 @@ Invocated shell is remote user shell (bash/ksh/zsh)
 
 Instead of passing custom env file, you can create a `~/.nerdrc` env file that will be automatically sourced after user profile and forwarded by psudo/pssh/psshu.
 
+## /tmp full proof
+
+nerdps1 will use /var/tmp if not enough space in /tmp. (ssh connections can occur even if /tmp full on remote)
+
 ## Customizing prompt
 
 You can add informations on the prompt using ps1_info variable:  

@@ -403,7 +403,8 @@ pssh() {
     [ "$1" ] && [ -r "$1" ] && custom=$1 && shift
     ssh -t "$remote" "$@" "
         TMPDIR=/tmp
-        head -c 20000 /dev/zero >/tmp/.nerdps1.\$USER || export TMPDIR=/var/tmp
+        head -c 20000 /dev/zero >/tmp/.nerdps1.\$USER 2>/dev/null || export TMPDIR=/var/tmp
+        export TMPPREFIX=\$TMPDIR/zsh
         ps1_tmp=\$TMPDIR/.nerdps1.\$USER
         cat - <<'EOF$$' >\$ps1_tmp
 $(< $ps1_tmp)
@@ -427,8 +428,8 @@ psshu() {
     [ -r ~/.nerdrc ] && custom=~/.nerdrc
     [ "$1" ] && [ -r "$1" ] && custom=$1 && shift
     ssh -t $remote "$@" "
-        ps1_tmp=/tmp/.nerdps1.\$USER
-        head -c 20000 /dev/zero >\$ps1_tmp || export TMPDIR=/var/tmp
+        head -c 20000 /dev/zero >/tmp/.nerdps1.\$USER 2>/dev/null || export TMPDIR=/var/tmp
+        export TMPPREFIX=\$TMPDIR/zsh
         ps1_tmp=\$TMPDIR/.nerdps1.\$USER
         . <(curl -Ls -m 6 $ps1_url)
         mkdir -p \$ps1_tmp.profile
