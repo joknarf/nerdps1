@@ -9,7 +9,7 @@ head -c 20000 /dev/zero >/tmp/.nerdps1.$USER 2>/dev/null || {
     export TMPDIR=/var/tmp
 }
 ps1_tmp=$TMPDIR/.nerdps1.$USER
-
+[ -r ~/.nerdrc ] && . ~/.nerdrc
 cat - >$ps1_tmp <<'EOF'
 ######## powerline-awk ##########
 # Author: Franck Jouvanceau
