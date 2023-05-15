@@ -16,8 +16,6 @@ cat - >$ps1_tmp <<'EOF'
 # Powerline prompt with AWK (bash/zsh/ksh)
 # echo "loading $ps1_tmp" >&2
 
-type typeset >/dev/null 2>&1 || alias typeset=local  # ash no typeset
-
 # overiddable vars in your env
 : #${ps1_info_eval:='$(echo uid:$(id -u))'}
 : ${ps1_nopw:=0}        # disable powerline symbols :-(
@@ -34,6 +32,7 @@ ps1_style2="(/auto:exit_status (/blue:userhost )/lblack:cwd >/auto:git_branch > 
 : ${ps1_powerline:="$ps1_style1"}
 
 #=========================
+type typeset >/dev/null 2>&1 || alias typeset=local  # ash no typeset
 [ -x /bin/nawk ] && ps1_awk=nawk || ps1_awk=awk
 
 pwline() {
