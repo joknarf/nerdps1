@@ -392,7 +392,7 @@ psudo() {
     sudo -u "$ps1_user" -H sh -c "$(ps1_login "$@")"
 }
 
-# ssh connect bash copy nerdps1 from local
+# ssh connect get nerdps1 from local copy
 pssh() {
     typeset loginopts remote custom
     for i in "$@";do [[ $i = -* ]] || break;loginopts="$loginopts $i";shift;done
@@ -417,7 +417,7 @@ EOF$$
     "
 }
 
-# ssh connect bash get nerdps1 from $ps1_url
+# ssh connect get nerdps1 from $ps1_url
 psshu() {
     typeset loginopts remote custom
     for i in "$@";do [[ $i = -* ]] || break;loginopts="$loginopts $i";shift;done
