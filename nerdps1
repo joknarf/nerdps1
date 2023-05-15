@@ -357,14 +357,17 @@ ps1_login() {
     [[ $ps1_tmp != *.$USER ]] && cp $ps1_tmp.profile/.nerdrc $profdir 2>/dev/null
     typeset nerdps1="ps1_tmp=$ps1_tmp;TMPDIR=$TMPDIR;. $ps1_tmp"
     typeset load_custom="[ -r '$profdir/.nerdrc' ] && . '$profdir/.nerdrc'"
-    typeset gprofile=true uprofile=true
-    [ "$1" = "-g" ] && gprofile=false && shift
-    [ "$1" = "-u" ] && uprofile=false && shift
-    [ "$1" = "-p" ] && nerdps1=':' && shift
-    [ "$1" = "-b" ] && ps1_shell=bash && shift || ps1_shell=$(ps1_usershell $1)
+    typeset gprofile=true uprofile=true ps1_shell
+    for i in "$@";do
+        [[ $i != -* ]] && break
+        [ "$i" = "-g" ] && gprofile=false && shift
+        [ "$i" = "-u" ] && uprofile=false && shift
+        [ "$i" = "-p" ] && nerdps1=':' && shift
+        [ "$i" = "-b" ] && ps1_shell=bash && shift 
+    done
+    [ "$ps1_shell" ] || ps1_shell=$(ps1_usershell $1)
     [ -r ~/.nerdrc ] && cp ~/.nerdrc $profdir
     [ "$2" ] && [ -r "$2" ] && cp $2 $profdir/.nerdrc
-    ps1_user="$1"
     (
         echo "_gprof=$gprofile;_uprof=$uprofile"
         echo "ps1_powerline='$ps1_powerline'"
