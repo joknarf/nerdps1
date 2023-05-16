@@ -418,6 +418,30 @@ EOF$$
     "
 }
 
+# ssh connect get nerdps1 from local copy using ssh config
+pssh2() {
+    typeset loginopts remote custom
+    for i in "$@";do [[ $i = -* ]] || break;loginopts="$loginopts $i";shift;done
+    remote=$1
+    shift
+    [ -r $TMPDIR/.nerdps1.$USER.profile/.nerdrc ] && custom=$TMPDIR/.nerdps1.$USER.profile/.nerdrc
+    [ -r ~/.nerdrc ] && custom=~/.nerdrc
+    [ "$1" ] && [ -r "$1" ] && custom=$1 && shift
+    echo -n "RemoteCommand head -c 20000 /dev/zero >/tmp/.nerdps1.\$USER 2>/dev/null && TMPDIR=/tmp || TMPDIR=/var/tmp;TMPPREFIX=\$TMPDIR/zsh;. <(echo $(echo "
+        ps1_tmp=\$TMPDIR/.nerdps1.\$USER
+        cat - <<'EOF$$' >\$ps1_tmp
+$(< $ps1_tmp)
+EOF$$
+        . \$ps1_tmp
+	    mkdir -p \$ps1_tmp.profile
+        cat - <<'EOF$$' >\$ps1_tmp.profile/.nerdrc
+$([ "$custom" ] && cat "$custom")
+EOF$$
+        exec sh -c \"\$(ps1_login $loginopts \$USER)\"
+    " |gzip -c |base64 -w 0) |base64 -d |gzip -dc )" >nerd.ssh
+    ssh -t "$remote" -F nerd.ssh "$@"
+}
+
 # ssh connect get nerdps1 from $ps1_url
 psshu() {
     typeset loginopts remote custom
