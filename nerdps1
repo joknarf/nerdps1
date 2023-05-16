@@ -305,7 +305,7 @@ ps1_usershell() {
 }
 
 ps1_bashinit() {
-    echo 'cd
+    echo 'cd /;cd
     alias readonly=typeset
     typeset() {
         [ "$1" = -r ] && shift
@@ -321,7 +321,7 @@ ps1_bashinit() {
 }
 
 ps1_kshinit() {
-    echo 'cd
+    echo 'cd /;cd
     typeset +x ENV
     ENV=~/.kshrc
     alias readonly=typeset
@@ -339,7 +339,7 @@ ps1_kshinit() {
 }
 
 ps1_zshinit() {
-    echo 'cd
+    echo 'cd /;cd
     ZDOTDIR=~/
     for i in zshenv zprofile zshrc;do
         $_gprof && . /etc/zsh/$i
