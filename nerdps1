@@ -427,7 +427,7 @@ pssh2() {
     [ -r $TMPDIR/.nerdps1.$USER.profile/.nerdrc ] && custom=$TMPDIR/.nerdps1.$USER.profile/.nerdrc
     [ -r ~/.nerdrc ] && custom=~/.nerdrc
     [ "$1" ] && [ -r "$1" ] && custom=$1 && shift
-    echo -n "RemoteCommand head -c 20000 /dev/zero >/tmp/.nerdps1.\$USER 2>/dev/null && TMPDIR=/tmp || TMPDIR=/var/tmp;TMPPREFIX=\$TMPDIR/zsh;. <(echo $(echo "
+    echo "RemoteCommand head -c 20000 /dev/zero >/tmp/.nerdps1.\$USER 2>/dev/null && TMPDIR=/tmp || TMPDIR=/var/tmp;TMPPREFIX=\$TMPDIR/zsh;. <(echo $(echo "
         ps1_tmp=\$TMPDIR/.nerdps1.\$USER
         cat - <<'EOF$$' >\$ps1_tmp
 $(< $ps1_tmp)
@@ -438,8 +438,14 @@ EOF$$
 $([ "$custom" ] && cat "$custom")
 EOF$$
         exec sh -c \"\$(ps1_login $loginopts \$USER)\"
-    " |gzip -c |base64 -w 0) |base64 -d |gzip -dc )" >nerd.ssh
-    ssh -t "$remote" -F nerd.ssh "$@"
+    " |gzip -c |base64 -w 0) |base64 -d |gzip -dc)" >$TMPDIR/.nerdps1.$USER.ssh
+    args=( "$@" )
+    typeset -i n=0
+    while [ $n -lt ${#args[*]} ];do
+        [ "${args[n]}" = -F ] && cat ${args[n+1]} >>$TMPDIR/.nerdps1.$USER.ssh && unset args[n] args[n+1]
+        n=n+1
+    done
+    ssh -t "$remote" -F $TMPDIR/.nerdps1.$USER.ssh "${args[@]}"
 }
 
 # ssh connect get nerdps1 from $ps1_url
