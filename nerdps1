@@ -420,32 +420,35 @@ EOF$$
 
 # ssh connect get nerdps1 from local copy using ssh config
 pssh2() {
-    typeset loginopts remote custom
+    typeset loginopts remote custom i conf=false
     for i in "$@";do [[ $i = -* ]] || break;loginopts="$loginopts $i";shift;done
     remote=$1
     shift
     [ -r $TMPDIR/.nerdps1.$USER.profile/.nerdrc ] && custom=$TMPDIR/.nerdps1.$USER.profile/.nerdrc
     [ -r ~/.nerdrc ] && custom=~/.nerdrc
     [ "$1" ] && [ -r "$1" ] && custom=$1 && shift
-    echo "RemoteCommand head -c 20000 /dev/zero >/tmp/.nerdps1.\$USER 2>/dev/null && TMPDIR=/tmp || TMPDIR=/var/tmp;TMPPREFIX=\$TMPDIR/zsh;. <(echo $(echo "
-        ps1_tmp=\$TMPDIR/.nerdps1.\$USER
-        cat - <<'EOF$$' >\$ps1_tmp
+    echo "RemoteCommand head -c 20000 /dev/zero >/tmp/.nerdps1.\$USER 2>/dev/null && TMPDIR=/tmp || TMPDIR=/var/tmp;TMPPREFIX=\$TMPDIR/zsh;. <(echo $(gzip -c <<EOF_$$ |base64 -w 0
+ps1_tmp=\$TMPDIR/.nerdps1.\$USER
+cat - <<'EOF__$$' >\$ps1_tmp
 $(< $ps1_tmp)
-EOF$$
-        . \$ps1_tmp
-	    mkdir -p \$ps1_tmp.profile
-        cat - <<'EOF$$' >\$ps1_tmp.profile/.nerdrc
+EOF__$$
+. \$ps1_tmp
+mkdir -p \$ps1_tmp.profile
+cat - <<'EOF__$$' >\$ps1_tmp.profile/.nerdrc
 $([ "$custom" ] && cat "$custom")
-EOF$$
-        exec sh -c \"\$(ps1_login $loginopts \$USER)\"
-    " |gzip -c |base64 -w 0) |base64 -d |gzip -dc)" >$TMPDIR/.nerdps1.$USER.ssh
-    args=( "$@" )
-    typeset -i n=0
-    while [ $n -lt ${#args[*]} ];do
-        [ "${args[n]}" = -F ] && cat ${args[n+1]} >>$TMPDIR/.nerdps1.$USER.ssh && unset args[n] args[n+1]
-        n=n+1
-    done
-    ssh -t "$remote" -F $TMPDIR/.nerdps1.$USER.ssh "${args[@]}"
+EOF__$$
+exec sh -c "\$(ps1_login $loginopts \$USER)"
+EOF_$$
+) |base64 -d |gzip -dc)" >$TMPDIR/.nerdps1.$USER.ssh
+    OIFS="$IFS"
+    IFS=$'\n'
+    set -- $(for i in "$@";do
+        $conf && { conf=false; cat $i >>$TMPDIR/.nerdps1.$USER.ssh; continue; }
+        [ "$i" = '-F' ] && conf=true && continue
+        echo "$i"
+    done)
+    IFS="$OIFS"
+    ssh -t "$remote" -F $TMPDIR/.nerdps1.$USER.ssh "$@"
 }
 
 # ssh connect get nerdps1 from $ps1_url
