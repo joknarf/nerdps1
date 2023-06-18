@@ -32,10 +32,10 @@ ps1_style2="(/auto:exit_status (/blue:userhost )/lblack:cwd >/auto:git_branch > 
 : ${ps1_powerline:="$ps1_style1"}
 
 #=========================
-type typeset >/dev/null 2>&1 || alias typeset=local  # ash no typeset
+type local >/dev/null 2>&1 || alias local=typeset 
 [ -x /bin/nawk ] && ps1_awk=nawk || ps1_awk=awk
 
-pwline() {
+function pwline {
     : ${COLUMNS:=$(stty size 2>/dev/null)} # ash no $COLUMNS
     COLUMNS=${COLUMNS#* }
     : ${ps1_colors:="blue lblack green yellow/black lblue/black"} # just some defaults
@@ -149,8 +149,8 @@ pwline() {
 }
 
 
-ps1_git_branch() {
-    typeset git_head i git_branch
+function ps1_git_branch {
+    local git_head i git_branch
     git_head=.git/HEAD
     for i in . . . . . .;do
         [ -r "$git_head" ] && break
@@ -163,14 +163,14 @@ ps1_git_branch() {
     #git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'
 }
 
-ps1_userhost() {
-    typeset hostname
+function ps1_userhost {
+    local hostname
     hostname=$(uname -n)
     echo $USER@${hostname%%.*}
 }
 
-ps1_cwd() {
-    typeset spwd cols
+function ps1_cwd {
+    local spwd cols
     spwd=$PWD
     cols=${COLUMNS:-80}
     [[ $PWD = $HOME* ]] && spwd="~${PWD#$HOME}"
@@ -178,22 +178,22 @@ ps1_cwd() {
     echo "$spwd"
 }
 
-ps1_exit_status() {
+function ps1_exit_status {
     [ "$1" = 0 ] && echo "${ps1_exit_colors% *}:"|| echo "${ps1_exit_colors#* }:$1"
 }
 
-ps1_info() {
+function ps1_info {
     eval echo -n \""$ps1_info_eval"\"
     for i in $ps1_info_vars $ps1_info;do
         eval echo -n \"'|$'"$i"\"
     done
 }
 
-ps1_uidprompt() {
+function ps1_uidprompt {
     [ "$USER" = root ] && echo '#' || echo '$'    
 }
 
-ps1_freemem() {
+function ps1_freemem {
     [ ! -r /proc/meminfo ] && echo "black:" && return
     awk '
         /MemAvailable:/ { avail = $2 }
@@ -217,12 +217,12 @@ ps1_freemem() {
     ' /proc/meminfo
 }
 
-ps1_loadavg() {
-    typeset load=$(< /proc/loadavg)
+function ps1_loadavg {
+    local load=$(< /proc/loadavg)
     echo ${load%% *}
 }
 
-ps1_prompt() {
+function ps1_prompt {
     if [ "$BASH" ];then
         shell=bash
         prompt='\$'
@@ -272,7 +272,7 @@ ps1_prompt() {
 }
 
 # create powerline prompt
-ps1_set() {
+function ps1_set {
     VIRTUAL_ENV_DISABLE_PROMPT=1
     if [ "$BASH" ];then
         shopt -s checkwinsize 2>/dev/null
@@ -292,19 +292,19 @@ $PS1"
     return 0
 }
 
-ps1_restore() {
+function ps1_restore {
     PS1="$PS1_OLD"
 }
 
 #=========
 
-ps1_usershell() {
-    typeset shell=$(getent passwd "$1" 2>/dev/null)
+function ps1_usershell {
+    local shell=$(getent passwd "$1" 2>/dev/null)
     shell=${shell##*:}
     echo ${shell##*/}
 }
 
-ps1_bashinit() {
+function ps1_bashinit {
     echo 'cd /;cd
     alias readonly=typeset
     typeset() {
@@ -320,7 +320,7 @@ ps1_bashinit() {
     '
 }
 
-ps1_kshinit() {
+function ps1_kshinit {
     echo 'cd /;cd
     typeset +x ENV
     ENV=~/.kshrc
@@ -338,7 +338,7 @@ ps1_kshinit() {
     '
 }
 
-ps1_zshinit() {
+function ps1_zshinit {
     echo 'cd /;cd
     ZDOTDIR=~/
     for i in zshenv zprofile zshrc;do
@@ -350,13 +350,13 @@ ps1_zshinit() {
 }
 
 # build profile according to user shell
-ps1_login() {
-    typeset profdir="$TMPDIR/.nerdps1.$USER.profile"
+function ps1_login {
+    local profdir="$TMPDIR/.nerdps1.$USER.profile"
     mkdir -p $profdir
     [[ $ps1_tmp != *.$USER ]] && cp $ps1_tmp.profile/.nerdrc $profdir 2>/dev/null
-    typeset nerdps1="ps1_tmp=$ps1_tmp;TMPDIR=$TMPDIR;. $ps1_tmp"
-    typeset load_custom="[ -r '$profdir/.nerdrc' ] && . '$profdir/.nerdrc'"
-    typeset gprofile=true uprofile=true ps1_shell
+    local nerdps1="ps1_tmp=$ps1_tmp;TMPDIR=$TMPDIR;. $ps1_tmp"
+    local load_custom="[ -r '$profdir/.nerdrc' ] && . '$profdir/.nerdrc'"
+    local gprofile=true uprofile=true ps1_shell
     for i in "$@";do
         [[ $i != -* ]] && break
         [ "$i" = "-g" ] && gprofile=false && shift
@@ -387,14 +387,14 @@ ps1_login() {
 
 # psudo [-g -u -p -b] user [envfile]
 # sudo login to user using sudo -u $user
-psudo() {
+function psudo {
     ps1_user="$*";ps1_user=${ps1_user##*-[a-z] };ps1_user=${ps1_user% *}
     sudo -u "$ps1_user" -H sh -c "$(ps1_login "$@")"
 }
 
 # ssh connect get nerdps1 from local copy
-pssh() {
-    typeset loginopts remote custom
+function pssh {
+    local loginopts remote custom
     for i in "$@";do [[ $i = -* ]] || break;loginopts="$loginopts $i";shift;done
     remote=$1
     shift
@@ -419,8 +419,8 @@ EOF$$
 }
 
 # ssh connect get nerdps1 from local copy using ssh config
-pssh2() {
-    typeset loginopts remote custom i conf=false
+function pssh2 {
+    local loginopts remote custom i conf=false
     for i in "$@";do [[ $i = -* ]] || break;loginopts="$loginopts $i";shift;done
     remote=$1
     shift
@@ -452,8 +452,8 @@ EOF_$$
 }
 
 # ssh connect get nerdps1 from $ps1_url
-psshu() {
-    typeset loginopts remote custom
+function psshu {
+    local loginopts remote custom
     for i in "$@";do [[ $i = -* ]] || break;loginopts="$loginopts $i";shift;done
     remote=$1
     shift
