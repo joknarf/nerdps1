@@ -32,7 +32,7 @@ ps1_style2="(/auto:exit_status (/blue:userhost )/lblack:cwd >/auto:git_branch > 
 : ${ps1_powerline:="$ps1_style1"}
 
 #=========================
-type local >/dev/null 2>&1 || alias local=typeset 
+type typeset >/dev/null 2>&1 || alias typeset=local # ash 
 [ -x /bin/nawk ] && ps1_awk=nawk || ps1_awk=awk
 
 function pwline {
@@ -150,7 +150,7 @@ function pwline {
 
 
 function ps1_git_branch {
-    local git_head i git_branch
+    typeset git_head i git_branch
     git_head=.git/HEAD
     for i in . . . . . .;do
         [ -r "$git_head" ] && break
@@ -164,13 +164,13 @@ function ps1_git_branch {
 }
 
 function ps1_userhost {
-    local hostname
+    typeset hostname
     hostname=$(uname -n)
     echo $USER@${hostname%%.*}
 }
 
 function ps1_cwd {
-    local spwd cols
+    typeset spwd cols
     spwd=$PWD
     cols=${COLUMNS:-80}
     case "$PWD" in $HOME|$HOME/*) spwd="~${PWD#$HOME}";; esac
@@ -218,7 +218,7 @@ function ps1_freemem {
 }
 
 function ps1_loadavg {
-    local load=$(< /proc/loadavg)
+    typeset load=$(< /proc/loadavg)
     echo ${load%% *}
 }
 
@@ -299,7 +299,7 @@ function ps1_restore {
 #=========
 
 function ps1_usershell {
-    local shell=$(getent passwd "$1" 2>/dev/null)
+    typeset shell=$(getent passwd "$1" 2>/dev/null)
     shell=${shell##*:}
     echo ${shell##*/}
 }
@@ -351,12 +351,12 @@ function ps1_zshinit {
 
 # build profile according to user shell
 function ps1_login {
-    local profdir="$TMPDIR/.nerdps1.$USER.profile"
+    typeset profdir="$TMPDIR/.nerdps1.$USER.profile"
     mkdir -p $profdir
     [[ $ps1_tmp != *.$USER ]] && cp $ps1_tmp.profile/.nerdrc $profdir 2>/dev/null
-    local nerdps1="ps1_tmp=$ps1_tmp;TMPDIR=$TMPDIR;. $ps1_tmp"
-    local load_custom="[ -r '$profdir/.nerdrc' ] && . '$profdir/.nerdrc'"
-    local gprofile=true uprofile=true ps1_shell
+    typeset nerdps1="ps1_tmp=$ps1_tmp;TMPDIR=$TMPDIR;. $ps1_tmp"
+    typeset load_custom="[ -r '$profdir/.nerdrc' ] && . '$profdir/.nerdrc'"
+    typeset gprofile=true uprofile=true ps1_shell
     for i in "$@";do
         [[ $i != -* ]] && break
         [ "$i" = "-g" ] && gprofile=false && shift
@@ -394,7 +394,7 @@ function psudo {
 
 # ssh connect get nerdps1 from local copy
 function pssh {
-    local loginopts remote custom
+    typeset loginopts remote custom
     for i in "$@";do [[ $i = -* ]] || break;loginopts="$loginopts $i";shift;done
     remote=$1
     shift
@@ -420,7 +420,7 @@ EOF$$
 
 # ssh connect get nerdps1 from local copy using ssh config
 function pssh2 {
-    local loginopts remote custom i conf=false
+    typeset loginopts remote custom i conf=false
     for i in "$@";do [[ $i = -* ]] || break;loginopts="$loginopts $i";shift;done
     remote=$1
     shift
@@ -453,7 +453,7 @@ EOF_$$
 
 # ssh connect get nerdps1 from $ps1_url
 function psshu {
-    local loginopts remote custom
+    typeset loginopts remote custom
     for i in "$@";do [[ $i = -* ]] || break;loginopts="$loginopts $i";shift;done
     remote=$1
     shift
