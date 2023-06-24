@@ -258,6 +258,7 @@ function ps1_prompt {
         prompt='$(ps1_uidprompt)'
         post='${__ps1_cmdn[$HISTCMD]:=}'
     fi
+    [ "$BB_ASH_VERSION" ] && post=''
     echo -ne "$pre"'$(pwline '
     $ps1_awk -v shell="$shell" 'BEGIN {
         if (shell == "bash") {
