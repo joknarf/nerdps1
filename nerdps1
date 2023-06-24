@@ -185,8 +185,9 @@ function ps1_exit_status {
 
 # bash / to be called in PROMPT_COMMAND
 function ps1_clean_cmdn {
-    typeset ind=${!__ps1_cmdn[*]} i
-    for i in ${ind% *};do unset __ps1_cmdn[$i];done
+    [ ${#__ps1_cmdn[*]} -gt 1 ] || return
+    set -- ${!__ps1_cmdn[*]}
+    unset __ps1_cmdn[$1]
 }
 
 function ps1_info {
@@ -284,6 +285,8 @@ function ps1_set {
     if [ "$BASH" ];then
         shopt -s checkwinsize 2>/dev/null
         : ${PROMPT_DIRTRIM:=5}
+        : ${PROMPT_COMMAND:=ps1_clean_cmdn}
+        [[ $PROMPT_COMMAND = *ps1_clean_cmdn* ]] || PROMPT_COMMAND="$PROMPT_COMMAND;ps1_clean_cmdn"
     elif [ "$ZSH_VERSION" ];then
         setopt PROMPT_SUBST
         setopt sh_word_split # for i in $var
