@@ -256,20 +256,23 @@ function ps1_prompt {
         pre='\033]0;$HOSTNAME\007'
         shell=other
         prompt='$(ps1_uidprompt)'
+        post='${__ps1_cmdn[$HISTCMD]:=}'
     fi
     echo -ne "$pre"'$(pwline '
     $ps1_awk -v shell="$shell" 'BEGIN {
-        cmd["exit_status"] = "$(ps1_exit_status $? \\#)"
         if (shell == "bash") {
+            cmd["exit_status"] = "$(ps1_exit_status $? \\#)"
             cmd["userhost"] = "\\u@\\h"
             cmd["cwd"] = "\\w"
             cmd["time"] = "\\A"
             cmd["prompt"] = "\\$"
         } else if (shell == "zsh") {
+            cmd["exit_status"] = "$(ps1_exit_status $?)"
             cmd["userhost"] = "$(print -P %n@%m)"
             cmd["time"] = "$(print -P %T)"
             cmd["prompt"] = "%(!.#.$)"
         } else 
+            cmd["exit_status"] = "$(ps1_exit_status $? $HISTCMD)"
             cmd["time"] = "$(date +%H:%M)"
         nb = split(ARGV[1], segments, " ")
         for (i=1; i<=nb; i++) {
