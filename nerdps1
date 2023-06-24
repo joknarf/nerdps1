@@ -179,7 +179,14 @@ function ps1_cwd {
 }
 
 function ps1_exit_status {
+    [[ "$2" = [0-9]* ]] && [ -v "__ps1_cmdn[$2]" ] && echo "${ps1_exit_colors% *}:" && return
     [ "$1" = 0 ] && echo "${ps1_exit_colors% *}:"|| echo "${ps1_exit_colors#* }:$1"
+}
+
+# bash / to be called in PROMPT_COMMAND
+function ps1_clean_cmdn {
+    typeset ind=${!__ps1_cmdn[*]} i
+    for i in ${ind% *};do unset __ps1_cmdn[$i];done
 }
 
 function ps1_info {
@@ -227,7 +234,7 @@ function ps1_prompt {
         shell=bash
         prompt='\$'
         pre='\[\033]0;\\h\007'
-        post='\]'
+        post='${__ps1_cmdn[\#]=}\]'
     elif [ "$ZSH_VERSION" ];then
         shell=zsh
         prompt='%(!.#.$)'
@@ -240,7 +247,7 @@ function ps1_prompt {
     fi
     echo -ne "$pre"'$(pwline '
     $ps1_awk -v shell="$shell" 'BEGIN {
-        cmd["exit_status"] = "$(ps1_exit_status $?)"
+        cmd["exit_status"] = "$(ps1_exit_status $? \\#)"
         if (shell == "bash") {
             cmd["userhost"] = "\\u@\\h"
             cmd["cwd"] = "\\w"
