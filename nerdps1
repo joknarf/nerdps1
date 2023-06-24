@@ -179,7 +179,7 @@ function ps1_cwd {
 }
 
 function ps1_exit_status {
-    [[ "$2" = [0-9]* ]] && [ -v "__ps1_cmdn[$2]" ] && echo "${ps1_exit_colors% *}:" && return
+    [[ "$2" = [0-9]* ]] && [ ${__ps1_cmdn[$2]+ok} ] && echo "${ps1_exit_colors% *}:" && return
     [ "$1" = 0 ] && echo "${ps1_exit_colors% *}:"|| echo "${ps1_exit_colors#* }:$1"
 }
 
