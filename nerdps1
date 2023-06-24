@@ -186,8 +186,7 @@ function ps1_exit_status {
 # bash / to be called in PROMPT_COMMAND
 function ps1_clean_cmdn {
     set -- ${!__ps1_cmdn[*]}
-    [ "$2" ] || return
-    unset __ps1_cmdn[$1]
+    [ "$2" ] && unset __ps1_cmdn[$1]
 }
 
 function ps1_info {
