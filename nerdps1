@@ -180,6 +180,7 @@ function ps1_cwd {
 
 function ps1_exit_status {
     [[ "$2" = [0-9]* ]] && [ ${__ps1_cmdn[$2]+ok} ] && echo "${ps1_exit_colors% *}:" && return
+    [ "$__ps1_noexec" ] && echo "${ps1_exit_colors% *}:" && return
     [ "$1" = 0 ] && echo "${ps1_exit_colors% *}:"|| echo "${ps1_exit_colors#* }:$1"
 }
 
@@ -187,6 +188,17 @@ function ps1_exit_status {
 function ps1_clean_cmdn {
     set -- ${!__ps1_cmdn[*]}
     [ "$2" ] && unset __ps1_cmdn[$1]
+}
+
+# zsh 
+function ps1_preexec {
+    __ps1_preexec=1
+}
+
+# zsh 
+function ps1_precmd {
+    [ "$__ps1_preexec" ] && unset __ps1_noexec || __ps1_noexec=1
+    unset __ps1_preexec
 }
 
 function ps1_info {
@@ -240,6 +252,9 @@ function ps1_prompt {
         prompt='%(!.#.$)'
         pre='%{\033]0;%m\007'
         post='%}'
+        autoload -Uz add-zsh-hook
+        add-zsh-hook preexec ps1_preexec
+        add-zsh-hook precmd ps1_precmd
     else
         pre='\033]0;$HOSTNAME\007'
         shell=other
