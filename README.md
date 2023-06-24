@@ -19,7 +19,7 @@ $ . <(curl -sL https://shorturl.at/cjtzE)
 <img width="804" alt="image" src="https://user-images.githubusercontent.com/10117818/236626851-eb236c7d-0756-48c6-b2f2-cb42de60b398.png">
 
 You can get your local copy using:  
-`$ curl -sL -o ~/nerps1 https://shorturl.at/cjtzE`  
+`$ curl -sL -o ~/nerdps1 https://shorturl.at/cjtzE`  
 then source it in your profile/rcfile:  
 `. ~/nerdps1`
 
