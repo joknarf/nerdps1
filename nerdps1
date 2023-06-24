@@ -252,9 +252,6 @@ function ps1_prompt {
         prompt='%(!.#.$)'
         pre='%{\033]0;%m\007'
         post='%}'
-        autoload -Uz add-zsh-hook
-        add-zsh-hook preexec ps1_preexec
-        add-zsh-hook precmd ps1_precmd
     else
         pre='\033]0;$HOSTNAME\007'
         shell=other
@@ -495,6 +492,12 @@ $([ "$custom" ] && cat "$custom")
 EOF$$
         exec sh -c \"\$(ps1_login $loginopts \$USER)\"
     "
+}
+
+[ "$ZSH_VERSION" ] && {
+    autoload -Uz add-zsh-hook
+    add-zsh-hook preexec ps1_preexec
+    add-zsh-hook precmd ps1_precmd
 }
 
 ps1_set
