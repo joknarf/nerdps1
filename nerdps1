@@ -220,7 +220,7 @@ function ps1_freemem {
     $cmd |awk '
         /MemAvailable:/ { avail = $2 }
         /Buffer:|Cached:|MemFree:/ { free += $2 }
-        /^Pages (free|inactive|purgeable):/{ free += (($NF * ps) / 1024) }
+        /^Pages (free|inactive|purgeable|speculative):/{ free += (($NF * ps) / 1024) }
         END {
             split("K M G T P E Z Y", suff)
             if (avail) free = avail
