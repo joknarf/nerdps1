@@ -213,11 +213,15 @@ function ps1_uidprompt {
 }
 
 function ps1_freemem {
-    [ ! -r /proc/meminfo ] && echo "black:" && return
-    awk '
+    typeset cmd ps
+    [ -x /usr/bin/vm_stat ] && cmd='vm_stat' && ps=$(pagesize)
+    [ -r /proc/meminfo ] && cmd='cat /proc/meminfo' && ps=1
+    [ ! "$cmd" ] && echo "black:" && return
+    $cmd |awk '
         /MemAvailable:/ { avail = $2 }
         /Buffer:|Cached:/ { free -= $2 }
         /MemFree:/ { free += $2 }
+        /^Pages free:|Pages inactive:/{ free += (($NF * ps) / 1024) }
         END {
             split("K M G T P E Z Y", suff)
             if (avail) free = avail
@@ -233,7 +237,7 @@ function ps1_freemem {
             else free=sprintf("%s:%.2f%s", color, free, suff[i]);
 	    print(free)
         }
-    ' /proc/meminfo
+    ' ps="$ps"
 }
 
 function ps1_loadavg {
