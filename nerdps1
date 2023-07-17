@@ -335,16 +335,13 @@ function ps1_usershell {
 
 function ps1_bashinit {
     echo 'cd /;cd
+    alias typeset="typeset +r"
     alias readonly=typeset
-    typeset() {
-        [ "$1" = -r ] && shift
-        builtin typeset "$@"
-    }
     $_gprof && . /etc/profile
     $_uprof && for i in .bash_profile .bash_login .profile;do
         [ -r $i ] && . ./$i && break
     done
-    unset -f typeset
+    unalias typeset
     unalias readonly
     '
 }
@@ -353,12 +350,8 @@ function ps1_kshinit {
     echo 'cd /;cd
     typeset +x ENV
     ENV=~/.kshrc
+    alias typeset="typeset +r"
     alias readonly=typeset
-    _typeset() {
-        [ "$1" = -r ] && shift
-        command typeset "$@"
-    }
-    alias typeset=_typeset
     $_gprof && . /etc/profile
     [ -r .profile ] && $_uprof && . ./.profile
     [ -r "$ENV" ] && $_uprof && . $ENV
