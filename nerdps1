@@ -443,7 +443,7 @@ EOF$$
 
 # ssh connect get nerdps1 from local copy using ssh config
 function pssh2 {
-    typeset loginopts remote custom i conf=false
+    typeset loginopts remote custom i conf=false ssh_config=$TMPDIR/.nerdps1.$USER.ssh
     for i in "$@";do [[ $i = -* ]] || break;loginopts="$loginopts $i";shift;done
     remote=$1
     shift
@@ -462,16 +462,20 @@ $([ "$custom" ] && cat "$custom")
 EOF__$$
 exec sh -c "\$(ps1_login $loginopts \$USER)"
 EOF_$$
-) |base64 -d |gzip -dc)" >$TMPDIR/.nerdps1.$USER.ssh
+) |base64 -d |gzip -dc)" >$ssh_config
+    # add ssh config if -F ssh option
     OIFS="$IFS"
     IFS=$'\n'
+    typeset noconf=true
     set -- $(for i in "$@";do
-        $conf && { conf=false; cat $i >>$TMPDIR/.nerdps1.$USER.ssh; continue; }
+        $conf && { noconf=false; conf=false; cat $i >>$ssh_config; continue; }
         [ "$i" = '-F' ] && conf=true && continue
         echo "$i"
     done)
     IFS="$OIFS"
-    ssh -t "$remote" -F $TMPDIR/.nerdps1.$USER.ssh "$@"
+    # add user ssh config if no -F option
+    $noconf && [ -r ~/.ssh/config ] && cat ~/.ssh/config >>$ssh_config
+    ssh -t "$remote" -F $ssh_config "$@"
 }
 
 # ssh connect get nerdps1 from $ps1_url
