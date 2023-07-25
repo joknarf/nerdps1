@@ -234,8 +234,8 @@ function ps1_freemem {
             }
             if (free >= 100) free = sprintf("%s:%.0f%s", color, free, suff[i]);
             else if (free>=10) free = sprintf("%s:%.1f%s", color, free, suff[i]);
-            else free=sprintf("%s:%.2f%s", color, free, suff[i]);
-	    print(free)
+            else free = sprintf("%s:%.2f%s", color, free, suff[i]);
+            print(free)
         }
     ' ps=1
 }
