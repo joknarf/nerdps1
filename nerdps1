@@ -150,7 +150,7 @@ function pwline {
 
 
 function ps1_git_branch {
-    typeset git_head i git_branch
+    typeset git_head i git_branch git_status
     git_head=.git/HEAD
     for i in . . . . . .;do
         [ -r "$git_head" ] && break
@@ -159,8 +159,10 @@ function ps1_git_branch {
     [ ! -r "$git_head" ] && echo ':' && return
     git_branch=$(sed -e 's#.*/##' "$git_head")
     [ "$ps1_git_status" = 0 ] && echo "${ps1_git_colors% *}:$git_branch" && return
-    [[ "$(LANG=C git status -uno --no-ahead-behind 2> /dev/null |tail -n1)" = "nothing to commit"* ]] && echo "${ps1_git_colors% *}:$git_branch" || echo "${ps1_git_colors#* }:$git_branch"
-    #git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'
+    git_status=$(LANG=C git status -uno --no-ahead-behind 2>/dev/null)
+    [ $? = 129 ] && git_status=$(LANG=C git status -uno 2>/dev/null)
+    git_status=${git_status##*$'\n'}
+    [[ "$git_status" = "nothing to commit"* ]] && echo "${ps1_git_colors% *}:$git_branch" || echo "${ps1_git_colors#* }:$git_branch"
 }
 
 function ps1_userhost {
