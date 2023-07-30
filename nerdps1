@@ -218,19 +218,21 @@ function ps1_freemem {
     typeset cmd
     [ -x /usr/bin/vm_stat ] && cmd='vm_stat'
     [ -r /proc/meminfo ] && cmd='cat /proc/meminfo'
-    [ ! "$cmd" ] && [ -r /var/run/dmesg.boot ] && {
-        typeset availmem=$(awk '/avail memory = /{print "MemAvailable:",$4/1024}' /var/run/dmesg.boot)
-        [ "$availmem" ] && cmd="echo $availmem"
-    }
+    [ ! "$cmd" ] && [ -r /var/run/dmesg.boot ] && cmd='grep avail.memory /var/run/dmesg.boot'
     [ ! "$cmd" ] && echo "black:" && return
     $cmd |awk '
         /MemAvailable:/ { avail = $2 }
         /Buffer:|Cached:|MemFree:/ { free += $2 }
         /page size of/ { ps=$(NF-1) }
         /^Pages (free|inactive|purgeable|speculative):/{ free += (($NF * ps) / 1024) }
+        /avail memory = /{ avail = $4/1024 }
         END {
             split("K M G T P E Z Y", suff)
             if (avail) free = avail
+            if (free=="") {
+                print("black:")
+                exit(1)
+            }
             if (free<100*1024) color = "red"
             else if (free<300*1024) color = "yellow/black"
             else color = "lblack"
