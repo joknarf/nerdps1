@@ -218,6 +218,10 @@ function ps1_freemem {
     typeset cmd
     [ -x /usr/bin/vm_stat ] && cmd='vm_stat'
     [ -r /proc/meminfo ] && cmd='cat /proc/meminfo'
+    [ ! "$cmd" ] && [ -r /var/run/dmesg.boot ] && {
+        typeset availmem=$(awk '/avail memory = /{print "MemAvailable:",$4/1024}' /var/run/dmesg.boot)
+        [ "$availmem" ] && cmd="echo $availmem"
+    }
     [ ! "$cmd" ] && echo "black:" && return
     $cmd |awk '
         /MemAvailable:/ { avail = $2 }
