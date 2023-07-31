@@ -29,6 +29,8 @@ cat - >$ps1_tmp <<'EOF'
 #: ${ps1_url:=https://raw.githubusercontent.com/joknarf/nerdps1/main/nerdps1}
 ps1_style1="(/auto:exit_status (/blue:userhost )/auto:git_branch )/lblack:cwd > | (/lblue/black/blue:info (/auto:loadavg (/auto:freemem (/blue:time )"
 ps1_style2="(/auto:exit_status (/blue:userhost )/lblack:cwd >/auto:git_branch > | (/lblue/black/blue:info (/auto:loadavg (/auto:freemem (/blue:time )"
+ps1_winstyle="(/auto:exit_status (/blue:userhost )/auto:git_branch )/lblack:cwd > | (/lblue/black/blue:info (/auto:freemem (/blue:time )"
+[ "$WINDIR" ] && : ${ps1_powerline:=$ps1_winstyle}
 : ${ps1_powerline:="$ps1_style1"}
 
 #=========================
