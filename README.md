@@ -17,7 +17,7 @@ $ . <(curl -s https://raw.githubusercontent.com/joknarf/nerdps1/main/nerdps1)
 <img width="804" alt="image" src="https://github.com/joknarf/nerdps1/assets/10117818/d85b8657-2626-4919-825f-74d54e8df104">
 
 You can get your local copy using:  
-`$ curl -sL -o ~/nerdps1 https://raw.githubusercontent.com/joknarf/nerdps1/main/nerdps1
+`$ curl -sL -o ~/nerdps1 https://raw.githubusercontent.com/joknarf/nerdps1/main/nerdps1`
 then source it in your profile/rcfile:  
 `. ~/nerdps1`
 
