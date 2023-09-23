@@ -14,12 +14,24 @@ Then activate the nerdps1 prompt:
 $ . <(curl -s https://raw.githubusercontent.com/joknarf/nerdps1/main/nerdps1)
 ```
 
-<img width="804" alt="image" src="https://github.com/joknarf/nerdps1/assets/10117818/d85b8657-2626-4919-825f-74d54e8df104">
+<img width="804" alt="image" src="https://github.com/joknarf/nerdps1/assets/10117818/088e9936-0869-4f5b-8a3b-0fdcb6d7f933">
 
 You can get your local copy using:  
 `$ curl -sL -o ~/nerdps1 https://raw.githubusercontent.com/joknarf/nerdps1/main/nerdps1`  
 then source it in your profile/rcfile:  
 `. ~/nerdps1`
+
+Following information displayed:
+* exit code if command returns code is not 0
+* elapse time during command (bash/zsh) if command last more than 1s
+* user@hostname
+* current working directory
+* git branch if in git directory
+* python VIRTUAL_ENV and other variables values with name in ps1_variable
+* 1min cpu load
+* Available memory
+* Time
+  
 
 ## persistent prompt across sudo
 
