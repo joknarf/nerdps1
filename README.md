@@ -27,7 +27,7 @@ Following information displayed:
 * user@hostname
 * current working directory
 * git branch if in git directory
-* python VIRTUAL_ENV and other variables values with name in ps1_variable
+* python VIRTUAL_ENV and other variables values with name in `ps1_info` variable
 * 1min cpu load
 * Available memory
 * Time
