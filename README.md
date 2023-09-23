@@ -23,7 +23,7 @@ then source it in your profile/rcfile:
 
 Following information displayed:
 * exit code if command returns code is not 0
-* elapse time during command (bash/zsh) if command last more than 1s
+* elapse time during command (bash/zsh) if command lasts more than 1s
 * user@hostname
 * current working directory
 * git branch if in git directory
