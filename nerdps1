@@ -37,7 +37,12 @@ type typeset >/dev/null 2>&1 || alias typeset=local # ash
 [ -x /bin/nawk ] && ps1_awk=nawk || ps1_awk=awk
 function ps1_time_cmd
 {
-    [ -f $TMPDIR/.ps1_first_cmd.$USER.$$.2 ] && __ps1_1st_cmd=1
+
+    [ "$ps1_kshbug" = 0 ] && {
+        [ "$__ps1_cmd" = "$HISTCMD" ] && return
+        [ "$__ps1_prompt" = 1 ] && __ps1_1st_cmd=1
+        __ps1_prompt=$((__ps1_prompt+1))
+    }
     [ "$__ps1_1st_cmd" = 1 ] || return
     unset __ps1_1st_cmd
     __ps1_sec=${SECONDS%.*}
@@ -48,11 +53,7 @@ function ps1_elapse
     [ "$__ps1_sec" = -1 ] && return
     seconds=$((${SECONDS%.*}-$__ps1_sec))
     
-    [ "$ps1_kshbug" = 0 ] && {
-        rm $TMPDIR/.ps1_first_cmd.$USER.$$.1 2>/dev/null && return
-        rm $TMPDIR/.ps1_first_cmd.$USER.$$.2 2>/dev/null
-        [ $__ps1_cmd = "$HISTCMD" ] && return
-    }
+    [ "$ps1_kshbug" = 0 ] && [ "$__ps1_cmd" = "$HISTCMD" ] && return
     [ "$__ps1_noexec" ] && return
     [ $seconds = 0 ] && return
     [ $seconds -lt 60 ] && echo "${seconds}s" && return
@@ -547,6 +548,7 @@ EOF$$
 ps1_set
 
 __ps1_sec=${SECONDS%.*}
+__ps1_prompt=1
 
 [ "$ZSH_VERSION" ] && {
     autoload -Uz add-zsh-hook
@@ -554,7 +556,7 @@ __ps1_sec=${SECONDS%.*}
     add-zsh-hook precmd ps1_precmd
 } || {
     [ "$BASH" ] && { [[ "$BASH_VERSION" > "4.4" ]] && PS0='${_:$((__ps1_sec=$SECONDS, 0)):0}' || trap ps1_time_cmd DEBUG; }
-    [ "$ps1_kshbug" = 0 -a ! "$BB_ASH_VERSION" ] && touch $TMPDIR/.ps1_first_cmd.$USER.$$.1 touch $TMPDIR/.ps1_first_cmd.$USER.$$.2 && trap ps1_time_cmd DEBUG
+    [ "$ps1_kshbug" = 0 -a ! "$BB_ASH_VERSION" ] && trap ps1_time_cmd DEBUG
 }
 trap ps1_exit_clean EXIT
 
