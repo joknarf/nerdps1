@@ -28,7 +28,7 @@ cat - >$ps1_tmp <<'EOF'
 #: ${ps1_url:=https://raw.githubusercontent.com/joknarf/nerdps1/main/nerdps1}
 ps1_style1="(/auto:exit_status (/lblack:elapse (/blue:userhost )/auto:git_branch )/lblack:cwd > | (/lblue/black/blue:info (/auto:loadavg (/auto:freemem (/blue:time )"
 ps1_style2="(/auto:exit_status (/blue:userhost )/lblack:cwd >/auto:git_branch > | (/lblue/black/blue:info (/auto:loadavg (/auto:freemem (/blue:time )"
-ps1_winstyle="(/auto:exit_status (/blue:userhost )/auto:git_branch )/lblack:cwd > | (/lblue/black/blue:info (/auto:freemem (/blue:time )"
+ps1_winstyle="(/auto:exit_status (/lblack:elapse (/blue:userhost )/auto:git_branch )/lblack:cwd > | (/lblue/black/blue:info (/auto:freemem (/blue:time )"
 [ "$WINDIR" ] && : ${ps1_powerline:=$ps1_winstyle}
 : ${ps1_powerline:="$ps1_style1"}
 
@@ -37,22 +37,21 @@ type typeset >/dev/null 2>&1 || alias typeset=local # ash
 [ -x /bin/nawk ] && ps1_awk=nawk || ps1_awk=awk
 function ps1_time_cmd
 {
-    [ -f $TMPDIR/.ps1_first_cmd.$USER.$$.2 ] && ${__ps1_first_cmd[0]:=}
-    [ ${__ps1_first_cmd[0]+ok} ] || return
-    unset __ps1_first_cmd[0]
+    [ -f $TMPDIR/.ps1_first_cmd.$USER.$$.2 ] && __ps1_1st_cmd=1
+    [ "$__ps1_1st_cmd" = 1 ] || return
+    unset __ps1_1st_cmd
     __ps1_sec=${SECONDS%.*}
 }
 function ps1_elapse
 {
-    typeset seconds h m s oldsec
-    [ "$__ps1_sec" ] && oldsec=$__ps1_sec || oldsec=${!__ps1_sec[*]}
-    oldsec=${oldsec##* }
-    [ "$oldsec" ] || return
-    seconds=$((${SECONDS%.*}-$oldsec))
+    typeset seconds h m s
+    [ "$__ps1_sec" = -1 ] && return
+    seconds=$((${SECONDS%.*}-$__ps1_sec))
+    
     [ "$ps1_kshbug" = 0 ] && {
         rm $TMPDIR/.ps1_first_cmd.$USER.$$.1 2>/dev/null && return
         rm $TMPDIR/.ps1_first_cmd.$USER.$$.2 2>/dev/null
-        [ ${__ps1_cmdn[$HISTCMD]+ok} ] && return
+        [ $__ps1_cmd = "$HISTCMD" ] && return
     }
     [ "$__ps1_noexec" ] && return
     [ $seconds = 0 ] && return
@@ -214,24 +213,14 @@ function ps1_cwd {
 }
 
 function ps1_exit_status {
-    [[ "$2" = [0-9]* ]] && [ ${__ps1_cmdn[$2]+ok} ] && echo "${ps1_exit_colors% *}:" && return
+    [ "$2" ] && [ "$__ps1_cmd" = "$2" ] && echo "${ps1_exit_colors% *}:" && return
     [ "$__ps1_noexec" ] && echo "${ps1_exit_colors% *}:" && return
     [ "$1" = 0 ] && echo "${ps1_exit_colors% *}:"|| echo "${ps1_exit_colors#* }:$1"
-}
-
-# bash / to be called in PROMPT_COMMAND
-function ps1_clean_cmdn {
-    __ps1_first_cmd[0]=""
-    set -- ${!__ps1_cmdn[*]}
-    [ "$2" ] && unset __ps1_cmdn[$1]
-    set -- ${!__ps1_sec[*]}
-    [ "$2" ] && unset __ps1_sec[$1]
 }
 
 # zsh 
 function ps1_preexec {
     __ps1_preexec=1
-    unset __ps1_sec
     __ps1_sec=${SECONDS#.*}
 }
 
@@ -306,7 +295,7 @@ function ps1_prompt {
         shell=bash
         prompt='\$'
         pre='\[\033]0;\\h\007'
-        post='${__ps1_cmdn[\#]=}\]'
+        post='${_:$((__ps1_cmd=\#, __ps1_1st_cmd=1, __ps1_sec=-1, 0)):0}'
     elif [ "$ZSH_VERSION" ];then
         shell=zsh
         prompt='%(!.#.$)'
@@ -316,7 +305,7 @@ function ps1_prompt {
         pre='\033]0;$HOSTNAME\007'
         shell=other
         prompt='$(ps1_uidprompt)'
-        post='${__ps1_cmdn[$HISTCMD]:=}${__ps1_first_cmd[0]:=}'
+        post='${_:$((__ps1_cmd=$HISTCMD, __ps1_1st_cmd=1, 0)):0}'
     fi
     [ "$BB_ASH_VERSION" ] && post=''
     echo -ne "$pre"'$(pwline '
@@ -360,9 +349,6 @@ function ps1_set {
     if [ "$BASH" ];then
         shopt -s checkwinsize 2>/dev/null
         : ${PROMPT_DIRTRIM:=5}
-        : ${PROMPT_COMMAND:=ps1_clean_cmdn}
-        [[ $PROMPT_COMMAND = *ps1_clean_cmdn* || $PROMPT_COMMAND = __vsc_prompt_cmd_original ]] ||\
-            PROMPT_COMMAND="$PROMPT_COMMAND;ps1_clean_cmdn"
     elif [ "$ZSH_VERSION" ];then
         setopt PROMPT_SUBST
         setopt sh_word_split # for i in $var
@@ -560,13 +546,14 @@ EOF$$
 
 ps1_set
 
+__ps1_sec=${SECONDS%.*}
+
 [ "$ZSH_VERSION" ] && {
     autoload -Uz add-zsh-hook
     add-zsh-hook preexec ps1_preexec
     add-zsh-hook precmd ps1_precmd
-    __ps1_sec=${SECONDS%.*}
 } || {
-    [ "$BASH" ] && { [[ "$BASH_VERSION" > "4.4" ]] && PS0='${__ps1_sec[${SECONDS%.*}]=}' || trap ps1_time_cmd DEBUG; }
+    [ "$BASH" ] && { [[ "$BASH_VERSION" > "4.4" ]] && PS0='${_:$((__ps1_sec=$SECONDS, 0)):0}' || trap ps1_time_cmd DEBUG; }
     [ "$ps1_kshbug" = 0 -a ! "$BB_ASH_VERSION" ] && touch $TMPDIR/.ps1_first_cmd.$USER.$$.1 touch $TMPDIR/.ps1_first_cmd.$USER.$$.2 && trap ps1_time_cmd DEBUG
 }
 trap ps1_exit_clean EXIT
