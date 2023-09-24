@@ -46,14 +46,14 @@ function ps1_elapse
 {
     typeset seconds h m s
     [ -f $TMPDIR/.ps1_time.$USER.$$ ] || return
+    seconds=$((${SECONDS%.*}-$(<$TMPDIR/.ps1_time.$USER.$$)))
+    rm $TMPDIR/.ps1_time.$USER.$$
     [ "$ps1_kshbug" = 0 ] && {
         rm $TMPDIR/.ps1_first_cmd.$USER.$$.1 2>/dev/null && return
         rm $TMPDIR/.ps1_first_cmd.$USER.$$.2 2>/dev/null
         [ ${__ps1_cmdn[$HISTCMD]+ok} ] && return
     }
     [ "$__ps1_noexec" ] && return
-    seconds=$((${SECONDS%.*}-$(<$TMPDIR/.ps1_time.$USER.$$)))
-    rm $TMPDIR/.ps1_time.$USER.$$
     [ $seconds = 0 ] && return
     [ $seconds -lt 60 ] && echo "${seconds}s" && return
     m=$((seconds%3600/60))
@@ -64,7 +64,7 @@ function ps1_elapse
 }
 function ps1_exit_clean
 {
-    rm $TMPDIR/.ps1_time_cmd.$USER.$$ $TMPDIR/.ps1_first_cmd.$USER.$$.1 $TMPDIR/.ps1_first_cmd.$USER.$$.2 2>/dev/null
+    rm $TMPDIR/.ps1_time.$USER.$$ $TMPDIR/.ps1_first_cmd.$USER.$$.1 $TMPDIR/.ps1_first_cmd.$USER.$$.2 2>/dev/null
 }
 
 function pwline {
