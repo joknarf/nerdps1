@@ -40,14 +40,15 @@ function ps1_time_cmd
     [ -f $TMPDIR/.ps1_first_cmd.$USER.$$.2 ] && ${__ps1_first_cmd[0]:=}
     [ ${__ps1_first_cmd[0]+ok} ] || return
     unset __ps1_first_cmd[0]
-    echo ${SECONDS%.*} >$TMPDIR/.ps1_time.$USER.$$
+    __ps1_sec=${SECONDS%.*}
 }
 function ps1_elapse
 {
-    typeset seconds h m s
-    [ -f $TMPDIR/.ps1_time.$USER.$$ ] || return
-    seconds=$((${SECONDS%.*}-$(<$TMPDIR/.ps1_time.$USER.$$)))
-    rm $TMPDIR/.ps1_time.$USER.$$
+    typeset seconds h m s oldsec
+    [ "$__ps1_sec" ] && oldsec=$__ps1_sec || oldsec=${!__ps1_sec[*]}
+    oldsec=${oldsec##* }
+    [ "$oldsec" ] || return
+    seconds=$((${SECONDS%.*}-$oldsec))
     [ "$ps1_kshbug" = 0 ] && {
         rm $TMPDIR/.ps1_first_cmd.$USER.$$.1 2>/dev/null && return
         rm $TMPDIR/.ps1_first_cmd.$USER.$$.2 2>/dev/null
@@ -223,12 +224,15 @@ function ps1_clean_cmdn {
     __ps1_first_cmd[0]=""
     set -- ${!__ps1_cmdn[*]}
     [ "$2" ] && unset __ps1_cmdn[$1]
+    set -- ${!__ps1_sec[*]}
+    [ "$2" ] && unset __ps1_sec[$1]
 }
 
 # zsh 
 function ps1_preexec {
     __ps1_preexec=1
-    echo $SECONDS>$TMPDIR/.ps1_time.$USER.$$
+    unset __ps1_sec
+    __ps1_sec=${SECONDS#.*}
 }
 
 # zsh 
@@ -560,8 +564,9 @@ ps1_set
     autoload -Uz add-zsh-hook
     add-zsh-hook preexec ps1_preexec
     add-zsh-hook precmd ps1_precmd
+    __ps1_sec=${SECONDS%.*}
 } || {
-    [ "$BASH" ] && { [[ "$BASH_VERSION" > "4.4" ]] && PS0='$(ps1_time_cmd)' || trap ps1_time_cmd DEBUG; }
+    [ "$BASH" ] && { [[ "$BASH_VERSION" > "4.4" ]] && PS0='${__ps1_sec[${SECONDS%.*}]=}' || trap ps1_time_cmd DEBUG; }
     [ "$ps1_kshbug" = 0 -a ! "$BB_ASH_VERSION" ] && touch $TMPDIR/.ps1_first_cmd.$USER.$$.1 touch $TMPDIR/.ps1_first_cmd.$USER.$$.2 && trap ps1_time_cmd DEBUG
 }
 trap ps1_exit_clean EXIT
