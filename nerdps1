@@ -2,7 +2,7 @@
 [ "$1" = activate ] && awk 'NR>2' $0 && exit 0
 : ${USER:=$USERNAME}
 : ${USER:=$LOGNAME}
-TMPDIR=/tmp
+export TMPDIR=/tmp
 # check /tmp full
 head -c 20000 /dev/zero >/tmp/.nerdps1.$USER 2>/dev/null || {
     export TMPPREFIX=/var/tmp/zsh;
@@ -15,7 +15,6 @@ cat - >$ps1_tmp <<'EOF'
 # Author: Franck Jouvanceau
 # Powerline prompt with AWK (bash/zsh/ksh)
 # echo "loading $ps1_tmp" >&2
-
 # overiddable vars in your env
 #: ${ps1_info_eval:='$(echo uid:$(id -u))'}
 : ${ps1_nopw:=0}        # disable powerline symbols :-(
@@ -36,12 +35,24 @@ ps1_winstyle="(/auto:exit_status (/blue:userhost )/auto:git_branch )/lblack:cwd 
 #=========================
 type typeset >/dev/null 2>&1 || alias typeset=local # ash 
 [ -x /bin/nawk ] && ps1_awk=nawk || ps1_awk=awk
-[ "$BASH" ] && PS0='$(echo $SECONDS >$TMPDIR/.ps1_time.$USER.$$)'
+function ps1_time_cmd
+{
+    [ -f $TMPDIR/.ps1_first_cmd.$USER.$$.2 ] && ${__ps1_first_cmd[0]:=}
+    [ ${__ps1_first_cmd[0]+ok} ] || return
+    unset __ps1_first_cmd[0]
+    echo ${SECONDS%.*} >$TMPDIR/.ps1_time.$USER.$$
+}
 function ps1_elapse
 {
-    typeset seconds=0 h m s
+    typeset seconds h m s
     [ -f $TMPDIR/.ps1_time.$USER.$$ ] || return
-    seconds=$((SECONDS-$(<$TMPDIR/.ps1_time.$USER.$$)))
+    [ "$ps1_kshbug" = 0 ] && {
+        rm $TMPDIR/.ps1_first_cmd.$USER.$$.1 2>/dev/null && return
+        rm $TMPDIR/.ps1_first_cmd.$USER.$$.2 2>/dev/null
+        [ ${__ps1_cmdn[$HISTCMD]+ok} ] && return
+    }
+    [ "$__ps1_noexec" ] && return
+    seconds=$((${SECONDS%.*}-$(<$TMPDIR/.ps1_time.$USER.$$)))
     rm $TMPDIR/.ps1_time.$USER.$$
     [ $seconds = 0 ] && return
     [ $seconds -lt 60 ] && echo "${seconds}s" && return
@@ -51,11 +62,10 @@ function ps1_elapse
     h=$((seconds/3600))
     printf "%dh%02dm%02ds" $h $m $s && return
 }
-function ps1_clean_time
+function ps1_exit_clean
 {
-    rm $TMPDIR/.ps1_time.$USER.$$ 2>/dev/null
+    rm $TMPDIR/.ps1_time_cmd.$USER.$$ $TMPDIR/.ps1_first_cmd.$USER.$$.1 $TMPDIR/.ps1_first_cmd.$USER.$$.2 2>/dev/null
 }
-trap ps1_clean_time EXIT
 
 function pwline {
     : ${COLUMNS:=$(stty size 2>/dev/null)} # ash no $COLUMNS
@@ -210,6 +220,7 @@ function ps1_exit_status {
 
 # bash / to be called in PROMPT_COMMAND
 function ps1_clean_cmdn {
+    __ps1_first_cmd[0]=""
     set -- ${!__ps1_cmdn[*]}
     [ "$2" ] && unset __ps1_cmdn[$1]
 }
@@ -301,7 +312,7 @@ function ps1_prompt {
         pre='\033]0;$HOSTNAME\007'
         shell=other
         prompt='$(ps1_uidprompt)'
-        post='${__ps1_cmdn[$HISTCMD]:=}'
+        post='${__ps1_cmdn[$HISTCMD]:=}${__ps1_first_cmd[0]:=}'
     fi
     [ "$BB_ASH_VERSION" ] && post=''
     echo -ne "$pre"'$(pwline '
@@ -346,14 +357,16 @@ function ps1_set {
         shopt -s checkwinsize 2>/dev/null
         : ${PROMPT_DIRTRIM:=5}
         : ${PROMPT_COMMAND:=ps1_clean_cmdn}
-        [[ $PROMPT_COMMAND = *ps1_clean_cmdn* ]] || PROMPT_COMMAND="$PROMPT_COMMAND;ps1_clean_cmdn"
+        [[ $PROMPT_COMMAND = *ps1_clean_cmdn* || $PROMPT_COMMAND = __vsc_prompt_cmd_original ]] ||\
+            PROMPT_COMMAND="$PROMPT_COMMAND;ps1_clean_cmdn"
     elif [ "$ZSH_VERSION" ];then
         setopt PROMPT_SUBST
         setopt sh_word_split # for i in $var
     else
-        [[ "$BB_ASH_VERSION" ]] && ps1_kshbug=0
         [[ "$KSH_VERSION" ]] || : ${ps1_kshbug:=1}
         [[ "$KSH_VERSION" = *2012* ]] && : ${ps1_kshbug:=1}
+        : ${ps1_kshbug:=0}
+
     fi
     PS1_OLD="$PS1"
     PS1=$(ps1_prompt "$ps1_powerline")
@@ -417,7 +430,7 @@ function ps1_login {
     typeset profdir="$TMPDIR/.nerdps1.$USER.profile"
     mkdir -p $profdir
     [[ $ps1_tmp != *.$USER ]] && cp $ps1_tmp.profile/.nerdrc $profdir 2>/dev/null
-    typeset nerdps1="ps1_tmp=$ps1_tmp;TMPDIR=$TMPDIR;. $ps1_tmp"
+    typeset nerdps1="ps1_tmp=$ps1_tmp;export TMPDIR=$TMPDIR;. $ps1_tmp"
     typeset load_custom="[ -r '$profdir/.nerdrc' ] && . '$profdir/.nerdrc'"
     typeset gprofile=true uprofile=true ps1_shell
     for i in "$@";do
@@ -466,7 +479,7 @@ function pssh {
     [ -r ~/.nerdrc ] && custom=~/.nerdrc
     [ "$1" ] && [ -r "$1" ] && custom=$1 && shift
     ssh -t "$remote" "$@" "
-        TMPDIR=/tmp
+        export TMPDIR=/tmp
         head -c 20000 /dev/zero >/tmp/.nerdps1.\$USER 2>/dev/null || export TMPDIR=/var/tmp
         export TMPPREFIX=\$TMPDIR/zsh
         ps1_tmp=\$TMPDIR/.nerdps1.\$USER
@@ -491,7 +504,7 @@ function pssh2 {
     [ -r $TMPDIR/.nerdps1.$USER.profile/.nerdrc ] && custom=$TMPDIR/.nerdps1.$USER.profile/.nerdrc
     [ -r ~/.nerdrc ] && custom=~/.nerdrc
     [ "$1" ] && [ -r "$1" ] && custom=$1 && shift
-    echo "RemoteCommand head -c 20000 /dev/zero >/tmp/.nerdps1.\$USER 2>/dev/null && TMPDIR=/tmp || TMPDIR=/var/tmp;TMPPREFIX=\$TMPDIR/zsh;. <(echo $(gzip -c <<EOF_$$ |base64 -w 0
+    echo "RemoteCommand head -c 20000 /dev/zero >/tmp/.nerdps1.\$USER 2>/dev/null && export TMPDIR=/tmp || export TMPDIR=/var/tmp;TMPPREFIX=\$TMPDIR/zsh;. <(echo $(gzip -c <<EOF_$$ |base64 -w 0
 ps1_tmp=\$TMPDIR/.nerdps1.\$USER
 cat - <<'EOF__$$' >\$ps1_tmp
 $(< $ps1_tmp)
@@ -529,7 +542,7 @@ function psshu {
     [ -r ~/.nerdrc ] && custom=~/.nerdrc
     [ "$1" ] && [ -r "$1" ] && custom=$1 && shift
     ssh -t $remote "$@" "
-        head -c 20000 /dev/zero >/tmp/.nerdps1.\$USER 2>/dev/null || export TMPDIR=/var/tmp
+        head -c 20000 /dev/zero >/tmp/.nerdps1.\$USER 2>/dev/null && export TMPDIR=/tmp|| export TMPDIR=/var/tmp
         export TMPPREFIX=\$TMPDIR/zsh
         ps1_tmp=\$TMPDIR/.nerdps1.\$USER
         . <(curl -Ls -m 6 $ps1_url)
@@ -541,13 +554,19 @@ EOF$$
     "
 }
 
+ps1_set
+
 [ "$ZSH_VERSION" ] && {
     autoload -Uz add-zsh-hook
     add-zsh-hook preexec ps1_preexec
     add-zsh-hook precmd ps1_precmd
+} || {
+    [ "$BASH" ] && { [[ "$BASH_VERSION" > "4.4" ]] && PS0='$(ps1_time_cmd)' || trap ps1_time_cmd DEBUG; }
+    [ "$ps1_kshbug" = 0 -a ! "$BB_ASH_VERSION" ] && touch $TMPDIR/.ps1_first_cmd.$USER.$$.1 touch $TMPDIR/.ps1_first_cmd.$USER.$$.2 && trap ps1_time_cmd DEBUG
 }
-ps1_set
+trap ps1_exit_clean EXIT
 
 ####### end powerline-awk ########
 EOF
+
 . $ps1_tmp
