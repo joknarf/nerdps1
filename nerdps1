@@ -305,7 +305,7 @@ function ps1_prompt {
         pre='\033]0;$HOSTNAME\007'
         shell=other
         prompt='$(ps1_uidprompt)'
-        post='${_:$((__ps1_cmd=$HISTCMD, __ps1_1st_cmd=1, 0)):0}'
+        post='${_:$((__ps1_cmd=$HISTCMD, __ps1_1st_cmd=1, __ps1_sec=-1, 0)):0}'
     fi
     [ "$BB_ASH_VERSION" ] && post=''
     echo -ne "$pre"'$(pwline '
