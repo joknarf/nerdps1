@@ -63,10 +63,6 @@ function ps1_elapse
     h=$((seconds/3600))
     printf "%dh%02dm%02ds" $h $m $s && return
 }
-function ps1_exit_clean
-{
-    rm $TMPDIR/.ps1_time.$USER.$$ $TMPDIR/.ps1_first_cmd.$USER.$$.1 $TMPDIR/.ps1_first_cmd.$USER.$$.2 2>/dev/null
-}
 
 function pwline {
     : ${COLUMNS:=$(stty size 2>/dev/null)} # ash no $COLUMNS
@@ -548,7 +544,6 @@ EOF$$
 ps1_set
 
 __ps1_sec=${SECONDS%.*}
-__ps1_prompt=1
 
 [ "$ZSH_VERSION" ] && {
     autoload -Uz add-zsh-hook
@@ -558,7 +553,8 @@ __ps1_prompt=1
     [ "$BASH" ] && { [[ "$BASH_VERSION" > "4.4" ]] && PS0='${_:$((__ps1_sec=$SECONDS, 0)):0}' || trap ps1_time_cmd DEBUG; }
     [ "$ps1_kshbug" = 0 -a ! "$BB_ASH_VERSION" ] && trap ps1_time_cmd DEBUG
 }
-trap ps1_exit_clean EXIT
+__ps1_prompt=1
+
 
 ####### end powerline-awk ########
 EOF
