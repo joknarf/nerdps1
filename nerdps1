@@ -34,9 +34,9 @@ ps1_winstyle="(/auto:exit_status (/lblack:elapse (/blue:userhost )/auto:git_bran
 #=========================
 type typeset >/dev/null 2>&1 || alias typeset=local # ash 
 [ -x /bin/nawk ] && ps1_awk=nawk || ps1_awk=awk
+
 function ps1_time_cmd
 {
-
     [ "$ps1_kshbug" = 0 ] && {
         [ "$__ps1_cmd" = "$HISTCMD" ] && return
         [ "$__ps1_prompt" = 1 ] && __ps1_1st_cmd=1
@@ -46,6 +46,7 @@ function ps1_time_cmd
     unset __ps1_1st_cmd
     __ps1_sec=${SECONDS%.*}
 }
+
 function ps1_elapse
 {
     typeset seconds h m s
@@ -304,7 +305,7 @@ function ps1_prompt {
         post='${_:$((__ps1_cmd=$HISTCMD, __ps1_1st_cmd=1, __ps1_sec=-1, 0)):0}'
     fi
     [ "$BB_ASH_VERSION" ] && post=''
-    echo -ne "$pre"'$(pwline '
+    printf "%s" "$pre"'$(pwline '
     $ps1_awk -v shell="$shell" 'BEGIN {
         if (shell == "bash") {
             cmd["exit_status"] = "$(ps1_exit_status $? \\#)"
@@ -349,7 +350,7 @@ function ps1_set {
         setopt PROMPT_SUBST
         setopt sh_word_split # for i in $var
     else
-        [[ "$KSH_VERSION" ]] || : ${ps1_kshbug:=1}
+        [[ "$BB_ASH_VERSION$KSH_VERSION" ]] || : ${ps1_kshbug:=1}
         [[ "$KSH_VERSION" = *2012* ]] && : ${ps1_kshbug:=1}
         : ${ps1_kshbug:=0}
 
@@ -542,7 +543,7 @@ EOF$$
 
 ps1_set
 
-__ps1_sec=${SECONDS%.*}
+__ps1_sec=-1
 
 [ "$ZSH_VERSION" ] && {
     autoload -Uz add-zsh-hook
