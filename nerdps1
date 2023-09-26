@@ -290,7 +290,7 @@ function ps1_loadavg {
 }
 
 function ps1_prompt {
-    $ps1_awk -v bash="$BASH" -v zsh="$ZSH_VERSION" -v ash="$BB_ASH_VERSION" 'BEGIN {
+    $ps1_awk -v bash="${BASH+1}" -v zsh="${ZSH_VERSION+1}" -v ash="${BB_ASH_VERSION+1}" 'BEGIN {
         if (bash) {
             prompt = "\\$"
             pre = "\\[\033]0;\\h\007"
