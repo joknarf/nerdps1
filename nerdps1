@@ -228,10 +228,12 @@ function ps1_precmd {
 }
 
 function ps1_info {
-    eval echo -n \""$ps1_info_eval"\"
+    typeset infos
+    infos=$(eval echo \""$ps1_info_eval"\")
     for i in $ps1_info_vars $ps1_info;do
-        eval echo -n \"'|$'"$i"\"
+        infos=$infos$(eval echo \"'|$'"$i"\")
     done
+    echo "$infos"
 }
 
 function ps1_uidprompt {
@@ -288,39 +290,34 @@ function ps1_loadavg {
 }
 
 function ps1_prompt {
-    if [ "$BASH" ];then
-        shell=bash
-        prompt='\$'
-        pre='\[\033]0;\\h\007'
-        post='${_:$((__ps1_cmd=\#, __ps1_1st_cmd=1, __ps1_sec=-1, 0)):0}'
-    elif [ "$ZSH_VERSION" ];then
-        shell=zsh
-        prompt='%(!.#.$)'
-        pre='%{\033]0;%m\007'
-        post='%}'
-    else
-        pre='\033]0;$HOSTNAME\007'
-        shell=other
-        prompt='$(ps1_uidprompt)'
-        post='${_:$((__ps1_cmd=$HISTCMD, __ps1_1st_cmd=1, __ps1_sec=-1, 0)):0}'
-    fi
-    [ "$BB_ASH_VERSION" ] && post=''
-    printf "%s" "$pre"'$(pwline '
-    $ps1_awk -v shell="$shell" 'BEGIN {
-        if (shell == "bash") {
+    $ps1_awk -v bash="$BASH" -v zsh="$ZSH_VERSION" -v ash="$BB_ASH_VERSION" 'BEGIN {
+        if (bash) {
+            prompt = "\\$"
+            pre = "\\[\033]0;\\h\007"
+            post = "${_:$((__ps1_cmd=\\#, __ps1_1st_cmd=1, __ps1_sec=-1, 0)):0}\\]"
             cmd["exit_status"] = "$(ps1_exit_status $? \\#)"
             cmd["userhost"] = "\\u@\\h"
             cmd["cwd"] = "\\w"
             cmd["time"] = "\\A"
             cmd["prompt"] = "\\$"
-        } else if (shell == "zsh") {
+        } else if (zsh) {
+            prompt = "%(!.#.$)"
+            pre = "%{\033]0;%m\007"
+            post = "%}"
             cmd["exit_status"] = "$(ps1_exit_status $?)"
             cmd["userhost"] = "$(print -P %n@%m)"
             cmd["time"] = "$(print -P %T)"
             cmd["prompt"] = "%(!.#.$)"
-        } else 
+        } else {
+            pre="\033]0;$HOSTNAME\007"
+            prompt="$(ps1_uidprompt)"
+            post="${_:$((__ps1_cmd=$HISTCMD, __ps1_1st_cmd=1, __ps1_sec=-1, 0)):0}"
+            if (ash) post=""
             cmd["exit_status"] = "$(ps1_exit_status $? $HISTCMD)"
             cmd["time"] = "$(date +%H:%M)"
+        }
+        printf("%s", pre)
+        printf("%s", "$(pwline ")
         nb = split(ARGV[1], segments, " ")
         for (i=1; i<=nb; i++) {
             n = split(segments[i], info, ":")
@@ -335,9 +332,9 @@ function ps1_prompt {
             else
                 printf("\"%s%s$(ps1_%s)\" ", info[1], sep, info[2])
         }
+        print(")"post)
+        print(prompt " ")
     }' "$@"
-    echo ")$post"
-    echo "$prompt "
 }
 
 # create powerline prompt
@@ -350,6 +347,7 @@ function ps1_set {
         setopt PROMPT_SUBST
         setopt sh_word_split # for i in $var
     else
+        : ${HOSTNAME:=$(uname -n)}
         [[ "$BB_ASH_VERSION$KSH_VERSION" ]] || : ${ps1_kshbug:=1}
         [[ "$KSH_VERSION" = *2012* ]] && : ${ps1_kshbug:=1}
         : ${ps1_kshbug:=0}
