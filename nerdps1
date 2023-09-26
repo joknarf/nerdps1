@@ -309,7 +309,7 @@ function ps1_prompt {
             cmd["time"] = "$(print -P %T)"
             cmd["prompt"] = "%(!.#.$)"
         } else {
-            pre="\033]0;$HOSTNAME\007"
+            pre="\033]0;$ps1_hostname\007"
             prompt="$(ps1_uidprompt)"
             post="${_:$((__ps1_cmd=$HISTCMD, __ps1_1st_cmd=1, __ps1_sec=-1, 0)):0}"
             if (ash) post=""
@@ -347,11 +347,11 @@ function ps1_set {
         setopt PROMPT_SUBST
         setopt sh_word_split # for i in $var
     else
-        : ${HOSTNAME:=$(uname -n)}
+        ps1_hostname=$(uname -n)
+        ps1_hostname=${ps1_hostname%%.*}
         [[ "$BB_ASH_VERSION$KSH_VERSION" ]] || : ${ps1_kshbug:=1}
         [[ "$KSH_VERSION" = *2012* ]] && : ${ps1_kshbug:=1}
         : ${ps1_kshbug:=0}
-
     fi
     PS1_OLD="$PS1"
     PS1=$(ps1_prompt "$ps1_powerline")
@@ -543,14 +543,16 @@ ps1_set
 
 __ps1_sec=-1
 
-[ "$ZSH_VERSION" ] && {
+if [ "$ZSH_VERSION" ] ; then
     autoload -Uz add-zsh-hook
     add-zsh-hook preexec ps1_preexec
     add-zsh-hook precmd ps1_precmd
-} || {
-    [ "$BASH" ] && { [[ "$BASH_VERSION" > "4.4" ]] && PS0='${_:$((__ps1_sec=$SECONDS, 0)):0}' || trap ps1_time_cmd DEBUG; }
-    [ "$ps1_kshbug" = 0 -a ! "$BB_ASH_VERSION" ] && trap ps1_time_cmd DEBUG
-}
+elif [ "$BASH" ] ; then
+    [[ "$BASH_VERSION" > "4.4" ]] && PS0='${_:$((__ps1_sec=$SECONDS, 0)):0}' || trap ps1_time_cmd DEBUG
+elif [ ! "$BB_ASH_VERSION" ] ; then
+    trap ps1_time_cmd DEBUG
+fi
+
 __ps1_prompt=1
 
 
