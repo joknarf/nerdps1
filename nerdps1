@@ -61,7 +61,6 @@ function ps1_elapse
 }
 
 function pwline {
-    # trap "" DEBUG 2>/dev/null
     : ${COLUMNS:=$(stty size 2>/dev/null)} # ash no $COLUMNS
     COLUMNS=${COLUMNS#* }
     : ${ps1_colors:="blue lblack green yellow/black lblue/black"} # just some defaults
