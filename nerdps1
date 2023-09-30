@@ -304,7 +304,7 @@ function ps1_loadavg {
 
 function ps1_prompt {
     typeset mksh
-    [[ $KSH_VERSION = *MIRBSD* ]] && mksh=1
+    [[ "$KSH_VERSION" = *MIRBSD* ]] && mksh=1
     $ps1_awk -v bash="${BASH+1}" -v zsh="${ZSH_VERSION+1}" -v ash="${BB_ASH_VERSION+1}" -v mksh=$mksh 'BEGIN {
         if (bash) {
             prompt = "\\$"
