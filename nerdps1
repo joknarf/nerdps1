@@ -37,14 +37,17 @@ type typeset >/dev/null 2>&1 || alias typeset=local # ash
 
 function ps1_time_cmd
 {
-    [ "$__ps1_sec" = -1 ] && __ps1_sec=$SECONDS
+    # echo "trap ${.sh.level} ${.sh.name} #${.sh.command%%=*}# $__ps1_sec" >&2
+    [ "$KSH_VERSION" ] && [ "${.sh.command%%=*}" = ".sh.subscript" ] && return #first prompt
+    [ "$__ps1_sec" = -1 ] && __ps1_sec=$SECONDS && return
+    [ "$__ps1_sec" ] || __ps1_sec=-1
+    return 0
 }
 
 function ps1_elapse
 {
     typeset seconds h m s
     [ "$__ps1_sec" = -1 ] && return
-    [ "$ps1_kshbug" = 0 ] && [ "$__ps1_cmd" = "$HISTCMD" ] && return
     [ "$__ps1_noexec" ] && return
     seconds=$(($SECONDS-$__ps1_sec))
     seconds=${seconds%.*}
@@ -58,6 +61,7 @@ function ps1_elapse
 }
 
 function pwline {
+    # trap "" DEBUG 2>/dev/null
     : ${COLUMNS:=$(stty size 2>/dev/null)} # ash no $COLUMNS
     COLUMNS=${COLUMNS#* }
     : ${ps1_colors:="blue lblack green yellow/black lblue/black"} # just some defaults
@@ -283,7 +287,9 @@ function ps1_loadavg {
 }
 
 function ps1_prompt {
-    $ps1_awk -v bash="${BASH+1}" -v zsh="${ZSH_VERSION+1}" -v ash="${BB_ASH_VERSION+1}" 'BEGIN {
+    typeset mksh
+    [[ $KSH_VERSION = *MIRBSD* ]] && mksh=1
+    $ps1_awk -v bash="${BASH+1}" -v zsh="${ZSH_VERSION+1}" -v ash="${BB_ASH_VERSION+1}" -v mksh=$mksh 'BEGIN {
         if (bash) {
             prompt = "\\$"
             pre = "\\[\033]0;\\h\007"
@@ -305,7 +311,7 @@ function ps1_prompt {
             pre="\033]0;$ps1_hostname\007"
             prompt="$(ps1_uidprompt)"
             post="${_:$((__ps1_cmd=$HISTCMD, __ps1_sec=-1, 0)):0}"
-            if (ash) post=""
+            if (ash||mksh) post=""
             cmd["exit_status"] = "$(ps1_exit_status $? $HISTCMD)"
             cmd["time"] = "$(date +%H:%M)"
         }
@@ -534,22 +540,19 @@ EOF$$
 __ps1_sec=-1
 ps1_set
 
-
-
 if [ "$ZSH_VERSION" ] ; then
     autoload -Uz add-zsh-hook
     add-zsh-hook preexec ps1_preexec
     add-zsh-hook precmd ps1_precmd
 elif [ "$BASH" ] ; then
     [[ "$BASH_VERSION" > "4.4" ]] && PS0='${_:$((__ps1_sec=$SECONDS, 0)):0}' || trap ps1_time_cmd DEBUG
-elif [ ! "$BB_ASH_VERSION" ] ; then
-    trap ps1_time_cmd DEBUG
+else 
+    [ "$ps1_kshbug" = 0 ] && trap ps1_time_cmd DEBUG 2>/dev/null
 fi
-
-__ps1_prompt=1
-
+__ps1_sec=-1
 
 ####### end powerline-awk ########
 EOF
 
 . $ps1_tmp
+:
