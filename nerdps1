@@ -42,7 +42,7 @@ function ps1_get_mseconds
         read s _ </proc/uptime
         ms=${s#*.}
         echo $((${s%.*}*100+${ms#0}))
-    } || echo "$SECONDS00"
+    } || echo "${SECONDS}00"
 }
 
 function ps1_time_cmd
