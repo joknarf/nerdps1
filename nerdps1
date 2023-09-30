@@ -231,7 +231,7 @@ function ps1_exit_status {
 # zsh 
 function ps1_preexec {
     __ps1_preexec=1
-    __ps1_sec=$SECONDS
+    __ps1_sec=$(ps1_get_mseconds)
 }
 
 # zsh 
