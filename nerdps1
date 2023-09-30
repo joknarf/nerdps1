@@ -186,7 +186,8 @@ function ps1_git_branch {
     [ "$ps1_git_status" = 0 ] && echo "${ps1_git_colors% *}:$git_branch" && return
     git_status=$(LANG=C git status -uno --no-ahead-behind 2>/dev/null)
     [ $? = 129 ] && git_status=$(LANG=C git status -uno 2>/dev/null)
-    git_status=${git_status##*$'\n'}
+    git_status=${git_status##*
+}
     [[ "$git_status" = "nothing to commit"* ]] && echo "${ps1_git_colors% *}:$git_branch" || echo "${ps1_git_colors#* }:$git_branch"
 }
 
