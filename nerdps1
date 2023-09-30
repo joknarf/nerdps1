@@ -38,7 +38,7 @@ type typeset >/dev/null 2>&1 || alias typeset=local # ash
 function ps1_get_mseconds
 {
     typeset s ms
-    [ -r /proc/uptime ] && {
+    [ -r /proc/uptime ] && [ ! "$ps1_use_seconds" ] && {
         read s _ </proc/uptime
         ms=${s#*.}
         echo $((${s%.*}*100+${ms#0}))
@@ -368,6 +368,7 @@ function ps1_set {
         [[ "$KSH_VERSION" = *2012* ]] && : ${ps1_kshbug:=1}
         : ${ps1_kshbug:=0}
     fi
+    [[ $(uname -r ) = *-ish ]] && : ${ps1_use_seconds:=1}
     PS1_OLD="$PS1"
     PS1=$(ps1_prompt "$ps1_powerline")
     [ "$ps1_blank_line" = 1 ] && PS1="
