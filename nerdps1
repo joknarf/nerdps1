@@ -35,24 +35,40 @@ ps1_winstyle="(/auto:exit_status (/lblack:elapse (/blue:userhost )/auto:git_bran
 type typeset >/dev/null 2>&1 || alias typeset=local # ash 
 [ -x /bin/nawk ] && ps1_awk=nawk || ps1_awk=awk
 
+function ps1_get_mseconds
+{
+    typeset s ms
+    [ -r /proc/uptime ] && {
+        read s _ </proc/uptime
+        ms=${s#*.}
+        echo $((${s%.*}*100+${ms#0}))
+    } || echo "$SECONDS00"
+}
+
 function ps1_time_cmd
 {
     # echo "trap ${.sh.level} ${.sh.name} #${.sh.command%%=*}# $__ps1_sec" >&2
     [ "$KSH_VERSION" ] && [ "${.sh.command%%=*}" = ".sh.subscript" ] && return #first prompt
-    [ "$__ps1_sec" = -1 ] && __ps1_sec=$SECONDS && return
+    [ "$__ps1_sec" = -1 ] && __ps1_sec=$(ps1_get_mseconds) && return
     [ "$__ps1_sec" ] || __ps1_sec=-1
     return 0
 }
 
 function ps1_elapse
 {
-    typeset seconds h m s
+    typeset seconds h m s end ms=0
     [ "$__ps1_sec" = -1 ] && return
     [ "$__ps1_noexec" ] && return
-    seconds=$(($SECONDS-$__ps1_sec))
-    seconds=${seconds%.*}
-    [ $seconds -le 1 ] && return
-    [ $seconds -lt 60 ] && echo "${seconds}s" && return
+    end=$(ps1_get_mseconds)
+    seconds=$(($end - $__ps1_sec))
+    ms=$(($seconds%100))
+    seconds=$((seconds/100))
+    #round=$(printf '%.0f' $seconds.$ms)
+    [ $seconds = 0 ] && return
+    [ $seconds -lt 60 ] && {
+        [ "$ms" = 0 ] && echo "${seconds}s" || printf '%d.%02ds' $seconds $ms
+        return
+    }
     m=$((seconds%3600/60))
     s=$((seconds%60))
     [ $seconds -lt 3600 ] && printf "%dm%02ds" $m $s && return
@@ -545,7 +561,7 @@ if [ "$ZSH_VERSION" ] ; then
     add-zsh-hook preexec ps1_preexec
     add-zsh-hook precmd ps1_precmd
 elif [ "$BASH" ] ; then
-    [[ "$BASH_VERSION" > "4.4" ]] && PS0='${_:$((__ps1_sec=$SECONDS, 0)):0}' || trap ps1_time_cmd DEBUG
+    [[ "$BASH_VERSION" > "4.4" ]] && PS0='${_:$((__ps1_sec=$(ps1_get_mseconds), 0)):0}' || trap ps1_time_cmd DEBUG
 else 
     [ "$ps1_kshbug" = 0 ] && trap ps1_time_cmd DEBUG 2>/dev/null
 fi
