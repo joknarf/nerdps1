@@ -24,7 +24,7 @@ cat - >$ps1_tmp <<'EOF'
 : ${ps1_exit_colors:="green red"}
 : ${ps1_git_colors:="green yellow/black"}
 : ${ps1_blank_line:=1}
-: ${ps1_fslist:="/ /tmp"}
+: ${ps1_fslist:="/ /tmp"} # put "-l" to have all local FS check
 : ${ps1_fslimits:="95 100"}
 : ${ps1_url:=https://raw.githubusercontent.com/joknarf/nerdps1/main/nerdps1}
 ps1_style1="(/auto:exit_status (/lblack:elapse (/blue:userhost )/auto:git_branch )/lblack:cwd > | (/lblue/black/blue:info (/auto:dfcheck (/auto:loadavg (/auto:freemem (/blue:time )"
@@ -232,15 +232,15 @@ function ps1_exit_status {
 
 function ps1_dfcheck {
     [ ! "$ps1_fslist" ] && echo "black:" && return
-    df -Pk $ps1_fslist |awk -v limits="$ps1_fslimits" '
+    df -Pk $ps1_fslist 2>/dev/null |awk -v limits="$ps1_fslimits" -v pct="${ZSH_VERSION+%}" '
     BEGIN { split(limits, lim); }
     NR>1 {
-        fs=$NF
+        fs = $NF
         if (fsch[fs]) next
         fsch[fs] = 1
-        pct=$(NF-1)+0
-        if (pct >= lim[2]+0) { alert++; msg=msg" "fs":"pct"%"; next; }
-        if (pct >= lim[1]+0) { warn++; msg=msg" "fs":"pct"%"}
+        used=$(NF-1)+0
+        if (used >= lim[2]+0) { alert++; msg=msg" "fs":"used"%"pct; next; }
+        if (used >= lim[1]+0) { warn++; msg=msg" "fs":"used"%"pct}
     }
     END {
         if (alert) { print("red/white:"msg); exit(1); }
