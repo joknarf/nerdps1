@@ -1,5 +1,5 @@
 # nerdps1
-Nerd prompt for bash/ksh/zsh
+Nerd prompt for bash/ksh/zsh (mksh/ash)
 
 ## activate the prompt
 
@@ -23,14 +23,14 @@ then source it in your profile/rcfile:
 
 Following information displayed:
 * exit code if command returns code is not 0
-* elapse time during command if command lasts more than 1s
+* elapse time during command if command lasts more than 1s (bash / zsh / ksh >2012)
 * user@hostname
 * current working directory
-* git branch if in git directory
+* git branch if in git directory (colorized according to git status)
 * python VIRTUAL_ENV and other variables values with name in `ps1_info` variable
 * filesystem usage check of ps1_fslist (default "/ /tmp") according to ps1_fslimits (default "95 100")
-* 1min cpu load
-* Available memory
+* 1min cpu load (colorized default ps1_loadlimits "10 20")
+* Available memory (colorized default ps1_memlimits "300 100" MB)
 * Time
   
 
