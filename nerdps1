@@ -19,7 +19,7 @@ cat - >$ps1_tmp <<'EOF'
 # echo "loading $ps1_tmp" >&2
 # overiddable vars in your env
 [ "$1" = reload ] && unset ps1_loaded
-[ "$ps1_loaded" ] && return
+[ "$ps1_loaded" ] && ps1_set && return
 ps1_loaded=1
 
 #: ${ps1_info_eval:='$(echo uid:$(id -u))'}
