@@ -1,5 +1,7 @@
 #!/bin/bash
-[ "$1" = activate ] && awk 'NR>2' $0 && exit 0
+[ "$1" = activate ] && unset ps1_loaded && awk 'NR>2' $0 && exit 0
+[ "$1" = reload ] && unset ps1_loaded
+[ "$ps1_loaded" ] && return
 : ${USER:=$USERNAME}
 : ${USER:=$LOGNAME}
 export TMPDIR=/tmp
@@ -16,6 +18,10 @@ cat - >$ps1_tmp <<'EOF'
 # Powerline prompt with AWK (bash/zsh/ksh)
 # echo "loading $ps1_tmp" >&2
 # overiddable vars in your env
+[ "$1" = reload ] && unset ps1_loaded
+[ "$ps1_loaded" ] && return
+ps1_loaded=1
+
 #: ${ps1_info_eval:='$(echo uid:$(id -u))'}
 : ${ps1_nopw:=0}        # disable powerline symbols :-(
 : ${ps1_info_vars:='client_id ORACLE_SID {VIRTUAL_ENV##*[/\\\\]}'}
@@ -325,6 +331,17 @@ function ps1_loadavg {
     echo "green:$load"
 }
 
+function ps1_osinfo {
+    [ -f /etc/os-release ] && . /etc/os-release || {
+        [ -f /etc/redhat-release ] && ID=$(awk '{sub("Red","rh", $1);print $1$(NF-1);exit(0);}' /etc/redhat-release)
+    }
+    : ${ID:=$(uname -o)}
+    [ "$ID" = "Darwin" ] && ID=$(sw_vers |awk -F':\t*' '$1=="ProductName"{s=$2}$1=="ProductVersion"{v=$2}END{print s v}')
+    ps1_osinfo="${ID%%.*}"
+    MAIN_VERSION_ID=${VERSION_ID%%.*}
+    [ ${#MAIN_VERSION_ID} -le 3 ] && ps1_osinfo="$ps1_osinfo${VERSION_ID%%.*}"
+}
+
 function ps1_prompt {
     typeset mksh
     [[ "$KSH_VERSION" = *MIRBSD* ]] && mksh=1
@@ -378,6 +395,7 @@ function ps1_prompt {
 # create powerline prompt
 function ps1_set {
     VIRTUAL_ENV_DISABLE_PROMPT=1
+    ps1_osinfo
     if [ "$BASH" ];then
         shopt -s checkwinsize 2>/dev/null
         : ${PROMPT_DIRTRIM:=5}
@@ -594,5 +612,5 @@ __ps1_sec=-1
 ####### end powerline-awk ########
 EOF
 
-. $ps1_tmp
+. $ps1_tmp "$@"
 :
