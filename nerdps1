@@ -19,7 +19,7 @@ cat - >$ps1_tmp <<'EOF'
 # echo "loading $ps1_tmp" >&2
 # overiddable vars in your env
 [ "$1" = reload ] && unset ps1_loaded
-[ "$ps1_loaded" ] && ps1_set && return
+[ "$ps1_loaded" ] && return
 ps1_loaded=1
 
 #: ${ps1_info_eval:='$(echo uid:$(id -u))'}
@@ -472,7 +472,7 @@ function ps1_login {
     typeset profdir="$TMPDIR/.nerdps1.$USER.profile"
     mkdir -p $profdir
     [[ $ps1_tmp != *.$USER ]] && cp $ps1_tmp.profile/.nerdrc $profdir 2>/dev/null
-    typeset nerdps1="ps1_tmp=$ps1_tmp;export TMPDIR=$TMPDIR;. $ps1_tmp"
+    typeset nerdps1="ps1_tmp=$ps1_tmp;export TMPDIR=$TMPDIR;. $ps1_tmp reload"
     typeset load_custom="[ -r '$profdir/.nerdrc' ] && . '$profdir/.nerdrc'"
     typeset gprofile=true uprofile=true ps1_shell
     for i in "$@";do
@@ -489,6 +489,7 @@ function ps1_login {
         echo "_gprof=$gprofile;_uprof=$uprofile"
         echo "ps1_powerline='$ps1_powerline'"
         echo "ps1_info='$ps1_info'"
+        echo "ps1_loaded=1"
     ) > "$profdir/.rc"
     ln -s .rc $profdir/.zshrc 2>/dev/null
     case "$ps1_shell" in
