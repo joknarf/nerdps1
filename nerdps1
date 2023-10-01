@@ -482,8 +482,8 @@ function ps1_login {
         [ "$i" = "-p" ] && nerdps1=':' && shift
         [ "$i" = "-b" ] && ps1_shell=bash && shift 
     done
+    $uprofile && cp ~/.nerdrc $profdir 2>/dev/null
     [ "$ps1_shell" ] || ps1_shell=$(ps1_usershell $1)
-    [ -r ~/.nerdrc ] && cp ~/.nerdrc $profdir
     [ "$2" ] && [ -r "$2" ] && cp $2 $profdir/.nerdrc
     (
         echo "_gprof=$gprofile;_uprof=$uprofile"
@@ -534,7 +534,7 @@ EOF$$
         cat - <<'EOF$$' >\$ps1_tmp.profile/.nerdrc
 $([ "$custom" ] && cat "$custom")
 EOF$$
-        exec sh -c \"\$(ps1_login $loginopts \$USER)\"
+        exec sh -c \"\$(ps1_powerline='$ps1_powerline' ps1_login $loginopts \$USER)\"
     "
 }
 
@@ -557,7 +557,7 @@ mkdir -p \$ps1_tmp.profile
 cat - <<'EOF__$$' >\$ps1_tmp.profile/.nerdrc
 $([ "$custom" ] && cat "$custom")
 EOF__$$
-exec sh -c "\$(ps1_login $loginopts \$USER)"
+exec sh -c "\$(ps1_powerline='$ps1_powerline' ps1_login $loginopts \$USER)"
 EOF_$$
 ) |base64 -d |gzip -dc)" >$ssh_config
     # add ssh config if -F ssh option
@@ -593,7 +593,7 @@ function psshu {
         cat - <<'EOF$$' >\$ps1_tmp.profile/.nerdrc
 $([ "$custom" ] && cat "$custom")
 EOF$$
-        exec sh -c \"\$(ps1_login $loginopts \$USER)\"
+        exec sh -c \"\$(ps1_powerline='$ps1_powerline' ps1_login $loginopts \$USER)\"
     "
 }
 __ps1_sec=-1
