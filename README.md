@@ -28,6 +28,7 @@ Following information displayed:
 * current working directory
 * git branch if in git directory
 * python VIRTUAL_ENV and other variables values with name in `ps1_info` variable
+* filesystem usage check of ps1_fslist (default "/ /tmp") according to ps1_fslimits (default "95 100")
 * 1min cpu load
 * Available memory
 * Time
