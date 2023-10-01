@@ -14,7 +14,7 @@ Then activate the nerdps1 prompt:
 $ . <(curl -s https://raw.githubusercontent.com/joknarf/nerdps1/main/nerdps1)
 ```
 
-<img width="804" alt="image" src="https://github.com/joknarf/nerdps1/assets/10117818/c2bb087d-53a9-4c20-bab4-4eec2a2cdef3">
+<img width="900" alt="image" src="https://github.com/joknarf/nerdps1/assets/10117818/ebc3f680-69b1-45d2-b1ce-b09b09b545f2">
 
 You can get your local copy using:  
 `$ curl -sL -o ~/nerdps1 https://raw.githubusercontent.com/joknarf/nerdps1/main/nerdps1`  
