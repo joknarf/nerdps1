@@ -4,7 +4,7 @@
 : ${USER:=$LOGNAME}
 export TMPDIR=/tmp
 # check /tmp full
-head -c 20000 /dev/zero >/tmp/.nerdps1.$USER 2>/dev/null || {
+head -c 21000 /dev/zero >/tmp/.nerdps1.$USER 2>/dev/null || {
     export TMPPREFIX=/var/tmp/zsh;
     export TMPDIR=/var/tmp
 }
@@ -26,6 +26,8 @@ cat - >$ps1_tmp <<'EOF'
 : ${ps1_blank_line:=1}
 : ${ps1_fslist:="/ /tmp"} # put "-l" to have all local FS check
 : ${ps1_fslimits:="95 100"}
+: ${ps1_loadlimits:="10 20"}
+: ${ps1_memlimits:="300 100"}
 : ${ps1_url:=https://raw.githubusercontent.com/joknarf/nerdps1/main/nerdps1}
 ps1_style1="(/auto:exit_status (/lblack:elapse (/blue:userhost )/auto:git_branch )/lblack:cwd > | (/lblue/black/blue:info (/auto:dfcheck (/auto:loadavg (/auto:freemem (/blue:time )"
 ps1_style2="(/auto:exit_status (/lblack:elapse (/blue:userhost )/lblack:cwd >/auto:git_branch > | (/lblue/black/blue:info (/auto:dfcheck (/auto:loadavg (/auto:freemem (/blue:time )"
@@ -279,21 +281,22 @@ function ps1_freemem {
     [ -r /proc/meminfo ] && cmd='cat /proc/meminfo'
     [ ! "$cmd" ] && [ -r /var/run/dmesg.boot ] && cmd='grep avail.memory /var/run/dmesg.boot'
     [ ! "$cmd" ] && echo "black:" && return
-    $cmd |awk '
+    $cmd |awk -v limits="$ps1_memlimits" '
         /MemAvailable:/ { avail = $2 }
         /Buffer:|Cached:|MemFree:/ { free += $2 }
         /page size of/ { ps=$(NF-1) }
         /^Pages (free|inactive|purgeable|speculative):/{ free += (($NF * ps) / 1024) }
         /avail memory = /{ avail = $4/1024 }
         END {
+            split(limits, lim)
             split("K M G T P E Z Y", suff)
             if (avail) free = avail
             if (free=="") {
                 print("black:")
                 exit(1)
             }
-            if (free<100*1024) color = "red"
-            else if (free<300*1024) color = "yellow/black"
+            if (free<lim[2]*1024) color = "red"
+            else if (free<lim[1]*1024) color = "yellow/black"
             else color = "lblack"
             for(i=1;i<=length(suff);i++) {
                 if (free > 1024) free/=1024
@@ -317,8 +320,8 @@ function ps1_loadavg {
     load=${load%% *}
     loadint=${load%.*}
     [ ! "$load" ] && echo "black:" && return 
-    [ $loadint -gt 20 ] && echo "red:$load" && return
-    [ $loadint -gt 10 ] && echo "yellow/black:$load" && return
+    [ $loadint -ge ${ps1_loadlimits#* } ] && echo "red:$load" && return
+    [ $loadint -ge ${ps1_loadlimits% *} ] && echo "yellow/black:$load" && return
     echo "green:$load"
 }
 
@@ -501,7 +504,7 @@ function pssh {
     [ "$1" ] && [ -r "$1" ] && custom=$1 && shift
     ssh -t "$remote" "$@" "
         export TMPDIR=/tmp
-        head -c 20000 /dev/zero >/tmp/.nerdps1.\$USER 2>/dev/null || export TMPDIR=/var/tmp
+        head -c 21000 /dev/zero >/tmp/.nerdps1.\$USER 2>/dev/null || export TMPDIR=/var/tmp
         export TMPPREFIX=\$TMPDIR/zsh
         ps1_tmp=\$TMPDIR/.nerdps1.\$USER
         cat - <<'EOF$$' >\$ps1_tmp
@@ -525,7 +528,7 @@ function pssh2 {
     [ -r $TMPDIR/.nerdps1.$USER.profile/.nerdrc ] && custom=$TMPDIR/.nerdps1.$USER.profile/.nerdrc
     [ -r ~/.nerdrc ] && custom=~/.nerdrc
     [ "$1" ] && [ -r "$1" ] && custom=$1 && shift
-    echo "RemoteCommand head -c 20000 /dev/zero >/tmp/.nerdps1.\$USER 2>/dev/null && export TMPDIR=/tmp || export TMPDIR=/var/tmp;TMPPREFIX=\$TMPDIR/zsh;. <(echo $(gzip -c <<EOF_$$ |base64 -w 0
+    echo "RemoteCommand head -c 21000 /dev/zero >/tmp/.nerdps1.\$USER 2>/dev/null && export TMPDIR=/tmp || export TMPDIR=/var/tmp;TMPPREFIX=\$TMPDIR/zsh;. <(echo $(gzip -c <<EOF_$$ |base64 -w 0
 ps1_tmp=\$TMPDIR/.nerdps1.\$USER
 cat - <<'EOF__$$' >\$ps1_tmp
 $(< $ps1_tmp)
@@ -563,7 +566,7 @@ function psshu {
     [ -r ~/.nerdrc ] && custom=~/.nerdrc
     [ "$1" ] && [ -r "$1" ] && custom=$1 && shift
     ssh -t $remote "$@" "
-        head -c 20000 /dev/zero >/tmp/.nerdps1.\$USER 2>/dev/null && export TMPDIR=/tmp|| export TMPDIR=/var/tmp
+        head -c 21000 /dev/zero >/tmp/.nerdps1.\$USER 2>/dev/null && export TMPDIR=/tmp|| export TMPDIR=/var/tmp
         export TMPPREFIX=\$TMPDIR/zsh
         ps1_tmp=\$TMPDIR/.nerdps1.\$USER
         . <(curl -Ls -m 6 $ps1_url)
