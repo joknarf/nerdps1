@@ -495,7 +495,7 @@ function ps1_login {
     ln -s .rc $profdir/.zshrc 2>/dev/null
     case "$ps1_shell" in
         *ksh) ps1_kshinit >>"$profdir/.rc"
-             echo "ENV=$profdir/.rc exec ksh -i";;
+             echo "ENV=$profdir/.rc exec $ps1_shell -i";;
         zsh) ps1_zshinit >>"$profdir/.rc"  
              echo "ZDOTDIR=$profdir exec zsh -di";;
         *)   ps1_bashinit >>"$profdir/.rc"
