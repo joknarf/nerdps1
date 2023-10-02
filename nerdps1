@@ -426,8 +426,7 @@ function ps1_restore {
 
 function ps1_usershell {
     typeset shell=$(getent passwd "$1" 2>/dev/null)
-    shell=${shell##*:}
-    echo ${shell##*/}
+    echo ${shell##*:}
 }
 
 function ps1_bashinit {
@@ -440,6 +439,7 @@ function ps1_bashinit {
     done
     unalias typeset
     unalias readonly
+    [ -r .nerdrc ] && . ./.nerdrc
     '
 }
 
@@ -454,6 +454,7 @@ function ps1_kshinit {
     [ -r "$ENV" ] && $_uprof && . $ENV
     unalias typeset
     unalias readonly
+    [ -r .nerdrc ] && . ./.nerdrc
     '
 }
 
@@ -465,6 +466,7 @@ function ps1_zshinit {
         [ -r .$i ] && $_uprof && . ./.$i
     done
     typeset +r PS1
+    [ -r .nerdrc ] && . ./.nerdrc
     '
 }
 
@@ -483,7 +485,7 @@ function ps1_login {
         [ "$i" = "-p" ] && nerdps1=':' && shift
         [ "$i" = "-b" ] && ps1_shell=bash && shift 
     done
-    $uprofile && cp ~/.nerdrc $profdir 2>/dev/null
+    [ "$1" = "$USER" ] || cp ~/.nerdrc $profdir 2>/dev/null
     [ "$ps1_shell" ] || ps1_shell=$(ps1_usershell $1)
     [ "$2" ] && [ -r "$2" ] && cp $2 $profdir/.nerdrc
     (
@@ -494,10 +496,10 @@ function ps1_login {
     ) > "$profdir/.rc"
     ln -s .rc $profdir/.zshrc 2>/dev/null
     case "$ps1_shell" in
-        *ksh) ps1_kshinit >>"$profdir/.rc"
+        */*ksh) ps1_kshinit >>"$profdir/.rc"
              echo "ENV=$profdir/.rc exec $ps1_shell -i";;
-        zsh) ps1_zshinit >>"$profdir/.rc"  
-             echo "ZDOTDIR=$profdir exec zsh -di";;
+        */zsh) ps1_zshinit >>"$profdir/.rc"  
+             echo "ZDOTDIR=$profdir exec $ps1_shell -di";;
         *)   ps1_bashinit >>"$profdir/.rc"
              echo "exec bash --init-file $profdir/.rc"
              ;;
