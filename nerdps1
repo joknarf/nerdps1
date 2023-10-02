@@ -240,7 +240,7 @@ function ps1_exit_status {
 
 function ps1_dfcheck {
     [ ! "$ps1_fslist" ] && echo "black:" && return
-    df -Pk $ps1_fslist 2>/dev/null |awk -v limits="$ps1_fslimits" -v pct="${ZSH_VERSION+%}" '
+    df -Pk $ps1_fslist 2>/dev/null |$ps1_awk -v limits="$ps1_fslimits" -v pct="${ZSH_VERSION+%}" '
     BEGIN { split(limits, lim); }
     NR>1 {
         fs = $NF
@@ -287,7 +287,7 @@ function ps1_freemem {
     [ -r /proc/meminfo ] && cmd='cat /proc/meminfo'
     [ ! "$cmd" ] && [ -r /var/run/dmesg.boot ] && cmd='grep avail.memory /var/run/dmesg.boot'
     [ ! "$cmd" ] && echo "black:" && return
-    $cmd |awk -v limits="$ps1_memlimits" '
+    $cmd |$ps1_awk -v limits="$ps1_memlimits" '
         /MemAvailable:/ { avail = $2 }
         /Buffer:|Cached:|MemFree:/ { free += $2 }
         /page size of/ { ps=$(NF-1) }
@@ -333,10 +333,11 @@ function ps1_loadavg {
 
 function ps1_osinfo {
     [ -f /etc/os-release ] && . /etc/os-release || {
-        [ -f /etc/redhat-release ] && ID=$(awk '{sub("Red","rh", $1);print $1$(NF-1);exit(0);}' /etc/redhat-release)
+        [ -f /etc/redhat-release ] && ID=$($ps1_awk '{sub("Red","rh", $1);print $1$(NF-1);exit(0);}' /etc/redhat-release)
     }
-    : ${ID:=$(uname -o)}
+    : ${ID:=$(uname -s)}
     [ "$ID" = "Darwin" ] && ID=$(sw_vers |awk -F':\t*' '$1=="ProductName"{s=$2}$1=="ProductVersion"{v=$2}END{print s v}')
+    [ "$ID" = "SunOS" ] && ID=$(uname -r) && ID="solaris${ID#*.}"
     ps1_osinfo="${ID%%.*}"
     MAIN_VERSION_ID=${VERSION_ID%%.*}
     [ ${#MAIN_VERSION_ID} -le 3 ] && ps1_osinfo="$ps1_osinfo${VERSION_ID%%.*}"
