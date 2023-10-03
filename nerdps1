@@ -517,7 +517,7 @@ function ps1_phelp {
 # psudo [-g -u -p -b] user [envfile]
 # sudo login to user using sudo -u $user
 function psudo {
-    [ "$1" = "" -o "$1" = "-h" ] && ps1_phelp "psudo [-b] [-g] [-u] [<user>]" && return
+    [ "$1" = "-h" ] && ps1_phelp "psudo [-b] [-g] [-u] [<user>]" && return
     ps1_user="$*";ps1_user=${ps1_user##*-[a-z] };ps1_user=${ps1_user% *}
     [ ! "$ps1_user" ] && ps1_user=root
     sudo -u "$ps1_user" -H sh -c "$(ps1_login "$@")"
