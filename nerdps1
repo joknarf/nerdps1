@@ -507,16 +507,25 @@ function ps1_login {
     echo "$load_custom;$nerdps1" >>"$profdir/.rc"
 }
 
+function ps1_phelp {
+    echo "usage: $1
+    -b : force bash shell
+    -g : skip load global profile (/etc/profile[.d])
+    -u : skip load <user> profile (~/.profile...)"
+}
+
 # psudo [-g -u -p -b] user [envfile]
 # sudo login to user using sudo -u $user
 function psudo {
+    [ "$1" = "" -o "$1" = "-h" ] && ps1_phelp "psudo [-b] [-g] [-u] [<user>]" && return
     ps1_user="$*";ps1_user=${ps1_user##*-[a-z] };ps1_user=${ps1_user% *}
-    [ "$ps1_user" = "-" ] && ps1_user=root
+    [ ! "$ps1_user" ] && ps1_user=root
     sudo -u "$ps1_user" -H sh -c "$(ps1_login "$@")"
 }
 
 # ssh connect get nerdps1 from local copy
 function pssh {
+    [ "$1" = "" -o "$1" = "-h" ] && ps1_phelp "pssh [-b] [-g] [-u] [<user>@]<host> [<ssh options>]" && return
     typeset loginopts remote custom
     for i in "$@";do [[ $i = -* ]] || break;loginopts="$loginopts $i";shift;done
     remote=$1
@@ -543,6 +552,7 @@ EOF$$
 
 # ssh connect get nerdps1 from local copy using ssh config
 function pssh2 {
+    [ "$1" = "" -o "$1" = "-h" ] && ps1_phelp "pssh2 [-b] [-g] [-u] [<user>@]<host> [<ssh options>]" && return
     typeset loginopts remote custom i conf=false ssh_config=$TMPDIR/.nerdps1.$USER.ssh
     for i in "$@";do [[ $i = -* ]] || break;loginopts="$loginopts $i";shift;done
     remote=$1
@@ -580,6 +590,7 @@ EOF_$$
 
 # ssh connect get nerdps1 from $ps1_url
 function psshu {
+    [ "$1" = "" -o "$1" = "-h" ] && ps1_phelp "psshu [-b] [-g] [-u] [<user>@]<host> [<ssh options>]" && return
     typeset loginopts remote custom
     for i in "$@";do [[ $i = -* ]] || break;loginopts="$loginopts $i";shift;done
     remote=$1
