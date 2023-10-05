@@ -7,7 +7,7 @@
 export TMPDIR=/tmp
 # check /tmp full
 head -c 21000 /dev/zero >/tmp/.nerdps1.$USER 2>/dev/null || {
-    export TMPPREFIX=/var/tmp/zsh;
+    export TMPPREFIX=/var/tmp/zsh
     export TMPDIR=/var/tmp
 }
 ps1_tmp=$TMPDIR/.nerdps1.$USER
@@ -17,11 +17,11 @@ cat - >$ps1_tmp <<'EOF'
 # Author: Franck Jouvanceau
 # Powerline prompt with AWK (bash/zsh/ksh)
 # echo "loading $ps1_tmp" >&2
-# overiddable vars in your env
 [ "$1" = reload ] && unset ps1_loaded
 [ "$ps1_loaded" ] && return
 ps1_loaded=1
 
+# overiddable vars in your env or .nerdrc
 #: ${ps1_info_eval:='$(echo uid:$(id -u))'}
 : ${ps1_nopw:=0}        # disable powerline symbols :-(
 : ${ps1_info_vars:='client_id ORACLE_SID {VIRTUAL_ENV##*[/\\\\]}'}
@@ -47,11 +47,10 @@ type typeset >/dev/null 2>&1 || alias typeset=local # ash
 
 function ps1_get_mseconds
 {
-    typeset s ms
+    typeset s
     [ -r /proc/uptime ] && [ ! "$ps1_use_seconds" ] && {
         read s _ </proc/uptime
-        ms=${s#*.}
-        echo $((${s%.*}*100+${ms#0}))
+        echo ${s/[.]/}
     } || echo "${SECONDS}00"
 }
 
@@ -519,7 +518,7 @@ function ps1_phelp {
 function psudo {
     [ "$1" = "-h" ] && ps1_phelp "psudo [-b] [-g] [-u] [<user>]" && return
     ps1_user="$*";ps1_user=${ps1_user##*-[a-z] };ps1_user=${ps1_user% *}
-    [ ! "$ps1_user" ] && ps1_user=root
+    : ${ps1_user:=root}
     sudo -u "$ps1_user" -H sh -c "$(ps1_login "$@")"
 }
 
