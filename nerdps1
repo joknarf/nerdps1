@@ -238,7 +238,7 @@ function ps1_exit_status {
 }
 
 function ps1_dfcheck {
-    [ ! "$ps1_fslist" ] && echo "black:" && return
+    [ ! "$ps1_fslist" ] && echo ':' && return
     df -Pk $ps1_fslist 2>/dev/null |$ps1_awk -v limits="$ps1_fslimits" -v pct="${ZSH_VERSION+%}" '
     BEGIN { split(limits, lim); }
     NR>1 {
@@ -252,7 +252,7 @@ function ps1_dfcheck {
     END {
         if (alert) { print("red/white:"msg); exit(1); }
         if (warn) { print("yellow/black:"msg); exit(1); }
-        print("black:")
+        print(":")
     }'
 }
 # zsh 
@@ -285,7 +285,7 @@ function ps1_freemem {
     [ -x /usr/bin/vm_stat ] && cmd='vm_stat'
     [ -r /proc/meminfo ] && cmd='cat /proc/meminfo'
     [ ! "$cmd" ] && [ -r /var/run/dmesg.boot ] && cmd='grep avail.memory /var/run/dmesg.boot'
-    [ ! "$cmd" ] && echo "black:" && return
+    [ ! "$cmd" ] && echo ':' && return
     $cmd |$ps1_awk -v limits="$ps1_memlimits" '
         /MemAvailable:/ { avail = $2 }
         /Buffer:|Cached:|MemFree:/ { free += $2 }
@@ -297,7 +297,7 @@ function ps1_freemem {
             split("K M G T P E Z Y", suff)
             if (avail) free = avail
             if (free=="") {
-                print("black:")
+                print(":")
                 exit(1)
             }
             if (free<lim[2]*1024) color = "red"
@@ -324,7 +324,7 @@ function ps1_loadavg {
     }
     load=${load%% *}
     loadint=${load%.*}
-    [ ! "$load" ] && echo "black:" && return 
+    [ ! "$load" ] && echo ":" && return 
     [ $loadint -ge ${ps1_loadlimits#* } ] && echo "red:$load" && return
     [ $loadint -ge ${ps1_loadlimits% *} ] && echo "yellow/black:$load" && return
     echo "green:$load"
