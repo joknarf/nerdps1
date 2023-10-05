@@ -59,13 +59,13 @@ function ps1_time_cmd
     # echo "trap ${.sh.level} ${.sh.name} #${.sh.command%%=*}# $__ps1_sec" >&2
     [ "$KSH_VERSION" ] && [ "${.sh.command%%=*}" = ".sh.subscript" ] && return #first prompt
     [ "$__ps1_sec" = -1 ] && __ps1_sec=$(ps1_get_mseconds) && return
-    [ "$__ps1_sec" ] || __ps1_sec=-1
     return 0
 }
 
 function ps1_elapse
 {
     typeset seconds h m s end ms=0
+    : ${__ps1_sec:=-1}
     [ "$__ps1_sec" = -1 ] && return
     [ "$__ps1_noexec" ] && return
     end=$(ps1_get_mseconds)
@@ -609,7 +609,6 @@ EOF$$
         exec sh -c \"\$(ps1_powerline='$ps1_powerline' ps1_login $loginopts \$USER)\"
     "
 }
-__ps1_sec=-1
 ps1_set
 
 if [ "$ZSH_VERSION" ] ; then
@@ -621,7 +620,6 @@ elif [ "$BASH" ] ; then
 else 
     [ "$ps1_kshbug" = 0 ] && trap ps1_time_cmd DEBUG 2>/dev/null
 fi
-__ps1_sec=-1
 
 ####### end powerline-awk ########
 EOF
