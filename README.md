@@ -3,7 +3,7 @@ Nerd prompt for bash/ksh/zsh (mksh/ash)
 
 ## activate the prompt
 
-Install Nerd font on your system/console (Windows console / Windows terminal / putty / git-bash / CmdEr / iTerm2 / Terminator...):  
+Install Nerd font on your system/console (Windows console / Windows terminal / putty / git-bash / CmdEr / iTerm2 / Terminator / MobaXterm...):  
 [Consolas NF](https://github.com/wclr/my-nerd-fonts/raw/master/Consolas%20NF/Consolas%20Nerd%20Font%20Complete%20Mono%20Windows%20Compatible.ttf)  
 [Nerd Fonts](https://www.nerdfonts.com/)
 
