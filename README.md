@@ -78,7 +78,8 @@ Invocated shell is remote user shell (bash/ksh/zsh)
 
 ## using .nerdrc as your custom env file
 
-Instead of passing custom env file, you can create a `~/.nerdrc` env file that will be automatically sourced after user profile and forwarded by psudo/pssh/psshu.
+Instead of passing custom env file, you can create a `~/.nerdrc` env file that will be automatically sourced after user profile and forwarded by psudo/pssh/psshu.  
+You can put all ps1_ variables to override nerdps1 defaults, and all functions/path/env settings you want to have everywhere !  
 
 ## /tmp full proof
 
@@ -90,6 +91,11 @@ You can add informations on the prompt using ps1_info variable:
 * `ps1_info="MYVAR MYVAR2..."` : will display content of variables
 * `ps1_info="(myfunc) (myfunc2)"` : will display output of functions myfunc myfunc2
 
+You can add custom colorized segment defining `ps1_addon()` function:
+* `ps1_addon() { pgrep rsyslogd >/dev/null || echo 'red:syslog'; }`
+output format of function:
+  `<bgcolor>[/<fgcolor>/<sepcolor>]:<message>[|message]`
+empty output discards the segment.
 
 Changing prompt powerline, ps1_powerline variable represents the prompt:  
 *  segment setting : `symbol/bgcolor/fgcolor/sepcolor:function`
