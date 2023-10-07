@@ -35,7 +35,7 @@ ps1_loaded=1
 : ${ps1_loadlimits:="10 20"}
 : ${ps1_memlimits:="300 100"}
 : ${ps1_url:=https://raw.githubusercontent.com/joknarf/nerdps1/main/nerdps1}
-ps1_style1="(/auto:exit_status (/lblack:elapse (/blue:userhost )/auto:git_branch )/lblack:cwd > | (/lblue/black/blue:info (/auto:dfcheck (/auto:loadavg (/auto:freemem (/blue:time )"
+ps1_style1="(/auto:exit_status (/lblack:elapse (/blue:userhost )/auto:git_branch )/lblack:cwd > | (/lblue/black/blue:info (/auto:addon (/auto:dfcheck (/auto:loadavg (/auto:freemem (/blue:time )"
 ps1_style2="(/auto:exit_status (/lblack:elapse (/blue:userhost )/lblack:cwd >/auto:git_branch > | (/lblue/black/blue:info (/auto:dfcheck (/auto:loadavg (/auto:freemem (/blue:time )"
 ps1_winstyle="(/auto:exit_status (/lblack:elapse (/blue:userhost )/auto:git_branch )/lblack:cwd > | (/lblue/black/blue:info (/auto:freemem (/blue:time )"
 [ "$WINDIR" ] && : ${ps1_powerline:=$ps1_winstyle}
@@ -164,7 +164,7 @@ function pwline {
                             emptywidth--
                         else
                             delete ARGV[j]
-                    else if (emptywidth - length(text) > 2+pwidth)
+                    else if (emptywidth - length(text) > 2+pwidth && text!=ARGV[j])
                         emptywidth -= length(text) + 2+pwidth
                     else
                         delete ARGV[j]
@@ -180,6 +180,7 @@ function pwline {
             gsub("^ +| +$", "", text)
             sp = " "
             if (text == symbol) { bg="reset"; width+=pwidth }
+            else if (text==ARGV[i]) continue
             else if (text == "") { text="";sp=""; width+=pwidth }
             else width += length(text) + 2+pwidth
             gsub("[|]", colors[sepcol] sep[symbol] colors[fg], text)
@@ -206,7 +207,7 @@ function ps1_git_branch {
         [ -r "$git_head" ] && break
         git_head="../$git_head"
     done
-    [ ! -r "$git_head" ] && echo ':' && return
+    [ ! -r "$git_head" ] && return
     git_branch=$(sed -e 's#.*/##' "$git_head")
     [ "$ps1_git_status" = 0 ] && echo "${ps1_git_colors% *}:$git_branch" && return
     git_status=$(LANG=C git status -uno --no-ahead-behind 2>/dev/null)
@@ -238,7 +239,7 @@ function ps1_exit_status {
 }
 
 function ps1_dfcheck {
-    [ ! "$ps1_fslist" ] && echo ':' && return
+    [ ! "$ps1_fslist" ] && return
     df -Pk $ps1_fslist 2>/dev/null |$ps1_awk -v limits="$ps1_fslimits" -v pct="${ZSH_VERSION+%}" '
     BEGIN { split(limits, lim); }
     NR>1 {
@@ -252,7 +253,6 @@ function ps1_dfcheck {
     END {
         if (alert) { print("red/white:"msg); exit(1); }
         if (warn) { print("yellow/black:"msg); exit(1); }
-        print(":")
     }'
 }
 # zsh 
@@ -268,13 +268,15 @@ function ps1_precmd {
 }
 
 function ps1_info {
-    typeset infos
+    typeset infos i
     infos=$(eval echo \""$ps1_info_eval"\")
     for i in $ps1_info_vars $ps1_info;do
         infos=$infos$(eval echo \"'|$'"$i"\")
     done
     echo "$infos"
 }
+
+type ps1_addon >/dev/null 2>&1 || ps1_addon() { :; }
 
 function ps1_uidprompt {
     [ "$USER" = root ] && echo '#' || echo '$'    
@@ -285,7 +287,7 @@ function ps1_freemem {
     [ -x /usr/bin/vm_stat ] && cmd='vm_stat'
     [ -r /proc/meminfo ] && cmd='cat /proc/meminfo'
     [ ! "$cmd" ] && [ -r /var/run/dmesg.boot ] && cmd='grep avail.memory /var/run/dmesg.boot'
-    [ ! "$cmd" ] && echo ':' && return
+    [ ! "$cmd" ] && return
     $cmd |$ps1_awk -v limits="$ps1_memlimits" '
         /MemAvailable:/ { avail = $2 }
         /Buffer:|Cached:|MemFree:/ { free += $2 }
@@ -296,10 +298,7 @@ function ps1_freemem {
             split(limits, lim)
             split("K M G T P E Z Y", suff)
             if (avail) free = avail
-            if (free=="") {
-                print(":")
-                exit(1)
-            }
+            if (free=="") exit(1)
             if (free<lim[2]*1024) color = "red"
             else if (free<lim[1]*1024) color = "yellow/black"
             else color = "lblack"
@@ -324,7 +323,7 @@ function ps1_loadavg {
     }
     load=${load%% *}
     loadint=${load%.*}
-    [ ! "$load" ] && echo ":" && return 
+    [ ! "$load" ] && return 
     [ $loadint -ge ${ps1_loadlimits#* } ] && echo "red:$load" && return
     [ $loadint -ge ${ps1_loadlimits% *} ] && echo "yellow/black:$load" && return
     echo "green:$load"
