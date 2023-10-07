@@ -115,10 +115,10 @@ used terminal colors in example:
         {
             "name": "NerdPS1",
             "background": "#000000",
+            "foreground": "#D3D7CF",
             "black": "#000000",
             "blue": "#2760AA",
             "cyan": "#06989A",
-            "foreground": "#D3D7CF",
             "green": "#088A5B",
             "purple": "#75507B",
             "red": "#BA1611",
