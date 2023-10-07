@@ -3,7 +3,7 @@ Nerd prompt for bash/ksh/zsh (mksh/ash)
 
 ## activate the prompt
 
-Install Nerd font on your system/console (Windows console / Windows terminal / putty / git-bash / CmdEr / iTerm2 / Terminator / MobaXterm...):  
+For better experience, install Nerd font on your system/console (Windows console / Windows terminal / putty / git-bash / CmdEr / iTerm2 / Terminator / MobaXterm / VScode terminal / Pycharm terminal...):  
 [Consolas NF](https://github.com/wclr/my-nerd-fonts/raw/master/Consolas%20NF/Consolas%20Nerd%20Font%20Complete%20Mono%20Windows%20Compatible.ttf)  
 [Nerd Fonts](https://www.nerdfonts.com/)
 
@@ -84,6 +84,13 @@ You can put all ps1_ variables to override nerdps1 defaults, and all functions/p
 ## /tmp full proof
 
 nerdps1 will use /var/tmp if not enough space in /tmp. (ssh connections can occur even if /tmp full on remote)
+
+## Font rendering
+
+If your terminal does not manage correctly nerd font symbols, you may switch to more commonly supported powerline font symbols, or even disable the segment separator symbols.  
+You can use : `ps1_nf` (nerd font) `ps1_pf` (powerline font) `ps1_nofont` and `ps1_ascii` to switch prompt display symbol characters:
+
+![image](https://github.com/joknarf/nerdps1/assets/10117818/8f79a154-a58a-4e64-b888-35d7aec77905)
 
 ## Customizing prompt
 
