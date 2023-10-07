@@ -108,3 +108,29 @@ Changing prompt powerline, ps1_powerline variable represents the prompt:
 ![image](https://github.com/joknarf/nerdps1/assets/10117818/54fa6b66-03b5-4b04-8920-a461efcd9ca4)
 * `ps1_powerline="auto:exit_status blue:userhost >/auto:git_branch >/lblack:cwd > | </lblue/black/blue:info </auto:freemem </blue:time"`
 ![image](https://github.com/joknarf/nerdps1/assets/10117818/f5d3bc4e-cf65-4889-af5b-817445575ef7)
+
+## color theme example
+used terminal colors in example:
+```json
+        {
+            "name": "NerdPS1",
+            "background": "#000000",
+            "black": "#000000",
+            "blue": "#2760AA",
+            "cyan": "#06989A",
+            "foreground": "#D3D7CF",
+            "green": "#088A5B",
+            "purple": "#75507B",
+            "red": "#BA1611",
+            "white": "#D3D7CF",
+            "yellow": "#CF8700",
+            "brightBlack": "#243C4F",
+            "brightBlue": "#729FCF",
+            "brightCyan": "#34E2E2",
+            "brightGreen": "#59c566",
+            "brightPurple": "#AD7FA8",
+            "brightRed": "#EF2929",
+            "brightWhite": "#EEEEEC",
+            "brightYellow": "#FCE94F"
+        }
+```
