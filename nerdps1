@@ -35,12 +35,14 @@ ps1_loaded=1
 : ${ps1_loadlimits:="10 20"}
 : ${ps1_memlimits:="300 100"}
 : ${ps1_url:=https://raw.githubusercontent.com/joknarf/nerdps1/main/nerdps1}
-ps1_style1="(/auto:exit_status (/lblack:elapse (/blue:userhost )/auto:git_branch )/lblack:cwd > | (/lblue/black/blue:info (/auto:addon (/auto:dfcheck (/auto:loadavg (/auto:freemem (/blue:time )"
-ps1_style2="(/auto:exit_status (/lblack:elapse (/blue:userhost )/lblack:cwd >/auto:git_branch > | (/lblue/black/blue:info (/auto:dfcheck (/auto:loadavg (/auto:freemem (/blue:time )"
+ps1_nfstyle="(/auto:exit_status (/lblack:elapse (/blue:userhost )/auto:git_branch )/lblack:cwd > | (/lblue/black/blue:info (/auto:addon (/auto:dfcheck (/auto:loadavg (/auto:freemem (/blue:time )"
+ps1_nfstyle2="(/auto:exit_status (/lblack:elapse (/blue:userhost )/lblack:cwd >/auto:git_branch > | (/lblue/black/blue:info (/auto:addon (/auto:dfcheck (/auto:loadavg (/auto:freemem (/blue:time )"
+ps1_pfstyle="/auto:exit_status /lblack:elapse /blue:userhost >/lblack:cwd >/auto:git_branch > | </lblue/black/blue:info </auto:addon </auto:dfcheck </auto:loadavg </auto:freemem </blue:time >"
 ps1_winstyle="(/auto:exit_status (/lblack:elapse (/blue:userhost )/auto:git_branch )/lblack:cwd > | (/lblue/black/blue:info (/auto:freemem (/blue:time )"
 [ "$WINDIR" ] && : ${ps1_powerline:=$ps1_winstyle}
-: ${ps1_powerline:="$ps1_style1"}
-
+: ${ps1_powerline:="$ps1_nfstyle"}
+alias ps1_pf='ps1_powerline="$ps1_pfstyle";ps1_set'
+alias ps1_nf='ps1_powerline="$ps1_nfstyle";ps1_set'
 #=========================
 type typeset >/dev/null 2>&1 || alias typeset=local # ash 
 [ -x /bin/nawk ] && ps1_awk=nawk || ps1_awk=awk
@@ -123,6 +125,7 @@ function pwline {
         if (info == "") return
         split(info, colinfo, "/")
         i=1
+        if (!colinfo[i]) i++
         if (colinfo[i] in sym)
             symbol = colinfo[i++]
         #print("\n="info, colinfo[i], i)
@@ -149,7 +152,6 @@ function pwline {
         init_symbols()
         split(pcol, pcols, " ")
         printf("\r%s%s", colors["wrapoff"], colors["black"])
-        #pw_symbol = sprintf("%c", strtonum("0xE0B0"))
         for (i=1;i<ARGC;i++) {
             text=ARGV[i]
             if (text=="|") {
