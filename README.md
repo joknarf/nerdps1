@@ -88,9 +88,12 @@ nerdps1 will use /var/tmp if not enough space in /tmp. (ssh connections can occu
 ## Font rendering
 
 If your terminal does not manage correctly nerd font symbols, you may switch to more commonly supported powerline font symbols, or even disable the segment separator symbols.  
-You can use : `ps1_nf` (nerd font) `ps1_pf` (powerline font) `ps1_nofont` and `ps1_ascii` to switch prompt display symbol characters:
-
-![image](https://github.com/joknarf/nerdps1/assets/10117818/8f79a154-a58a-4e64-b888-35d7aec77905)
+You can use : `ps1_display` function/var to switch prompt display symbol characters:
+```
+$ ps1_display -h
+usage: ps1_display <option>
+    <option>: nerdicons, nerd, powerline, nofont, ascii
+```
 
 ## Customizing prompt
 
