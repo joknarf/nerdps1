@@ -194,11 +194,11 @@ function ps1_pwline {
             ico = ""
             getbgfg(i, colinfo[1])
             text = gettext(text)
-            if (! text) continue
+            if (text == "") continue
             gsub("^ +| +$", "", text)
             sp = " "
             if (text == symbol) { bg="reset"; width+=pwidth }
-            else if (text==ARGV[i]) continue
+            else if (text == ARGV[i]) continue
             else if (text == "") { text="";sp="";ico=""; width+=pwidth }
             else width += length(text) + 2 + ((ico)?1:0) + pwidth
             gsub("[|]", colors[sepcol] sep[symbol] colors[fg], text)
