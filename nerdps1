@@ -35,7 +35,7 @@ ps1_loaded=1
 : ${ps1_memlimits:="300 100"}
 : ${ps1_url:=https://raw.githubusercontent.com/joknarf/nerdps1/main/nerdps1}
 : ${ps1_powerline:=$ps1_nfstyle}
-: ${ps1_display:=nerd} # powerline/nofont/ascii
+: ${ps1_display:=nerd} # nerdicons/powerline/nofont/ascii
 
 ps1_nfstyle="(/auto:exit_status (/lblack:elapse (/blue:userhost )/auto:git_branch )/lblack:cwd > | (/lblue/black/blue:info (/auto:addon (/auto:dfcheck (/auto:loadavg (/auto:freemem (/blue:time )"
 ps1_nfstyle2="(/auto:exit_status (/lblack:elapse (/blue:userhost )/lblack:cwd >/auto:git_branch > | (/lblue/black/blue:info (/auto:addon (/auto:dfcheck (/auto:loadavg (/auto:freemem (/blue:time )"
@@ -92,11 +92,17 @@ function ps1_pwline {
     : ${ps1_colors:="blue lblack green yellow/black lblue/black"} # just some defaults
     $ps1_awk -v pcol="$ps1_colors" -v columns="$COLUMNS" -v nopw="$ps1_nopw" -v kshbug="$ps1_kshbug" '
     function init_symbols(  symbols,ts) {
+        if (nopw==0) {
+            icons["warn"] = ""
+            icons["error"] = ""
+            icons["ok"] = ""
+        }
         symbols[0] = "_                                                                          "
-        symbols[1] = "_                                                                          "
-        symbols[2] = "_ • • • •   • • • •   • • • •   • • • •   • • • •  • • • •   • • • •   • • • •  • • • •   • • • •   • • • •   • • • •   • • • •"
-        symbols[3] = ""
-        chars   =      ">   <     )   (     L   l      U  u     F   f    D   d     M   m     G  g     P   p     B   b     N   n     C   c     R   r"
+        symbols[1] = symbols[0]
+        symbols[2] = "_                                                                          "
+        symbols[3] = "_ • • • •   • • • •   • • • •   • • • •   • • • •  • • • •   • • • •   • • • •  • • • •   • • • •   • • • •   • • • •   • • • •"
+        symbols[4] = ""
+        chars   =      ">   <     )   (     L   l     U   u s    F   f    D   d     M   m     G  g     P   p     B   b     N   n     C   c     R   r"
         split(symbols[nopw],ts)
         gpwidth=length(ts[2])
         split(chars,tc)
@@ -137,6 +143,8 @@ function ps1_pwline {
             bg = colinfo[i]
         fg = colinfo[i+1] == "" ? "lwhite" : colinfo[i+1]
         sepcol = colinfo[i+2]
+        ico = icons[colinfo[i+3]]
+        lico = length(ico)
     }
     function getbgfg(i, info) {
         bg = ""
@@ -162,15 +170,18 @@ function ps1_pwline {
                 emptywidth = columns - width -1 # avoid last column for resize
                 for(j=ARGC-1;j>i;j--) {
                     text = gettext(ARGV[j])
+                    getcols(ARGV[j])
                     if (text == "") continue
                     gsub("^ +| +$", "", text)
+                    split(text, colinfo, ":")
+                    getcols(colinfo[1])
                     if (text in sym)
                         if (emptywidth - length(gettext(ARGV[j-1])) > 3+pwidth)
                             emptywidth--
                         else
                             delete ARGV[j]
-                    else if (emptywidth - length(text) > 2+pwidth && text!=ARGV[j])
-                        emptywidth -= length(text) + 2+pwidth
+                    else if (emptywidth - length(text) - lico > 2+pwidth && text!=ARGV[j])
+                        emptywidth -= length(text) + 2 + lico + pwidth
                     else
                         delete ARGV[j]
                 }
@@ -179,6 +190,7 @@ function ps1_pwline {
                 continue
             }
             split(text, colinfo, ":")
+            ico = ""
             getbgfg(i, colinfo[1])
             text = gettext(text)
             if (! text) continue
@@ -186,18 +198,17 @@ function ps1_pwline {
             sp = " "
             if (text == symbol) { bg="reset"; width+=pwidth }
             else if (text==ARGV[i]) continue
-            else if (text == "") { text="";sp=""; width+=pwidth }
-            else width += length(text) + 2+pwidth
+            else if (text == "") { text="";sp="";ico=""; width+=pwidth }
+            else width += length(text) + 2 + length(ico) + pwidth
             gsub("[|]", colors[sepcol] sep[symbol] colors[fg], text)
-
             if (rev[symbol]) {
                 printf("%s", colors[bg] sym[symbol])
                 if (text!=symbol) 
-                    printf("%s", colors[fg] colors["b"bg] sp text sp colors[bg])
+                    printf("%s", colors[fg] colors["b"bg] ico sp text sp colors[bg])
             } else {
                 printf("%s", colors["b"bg] sym[symbol])
                 if (text!=symbol)
-                    printf("%s", colors[fg] sp text sp colors["reset_all"] colors[bg] colors["b"bg])
+                    printf("%s", colors[fg] ico sp text sp colors["reset_all"] colors[bg] colors["b"bg])
             }
         }
         printf("%s%s\n", colors["reset_all"], colors["wrapon"])
@@ -240,7 +251,7 @@ function ps1_cwd {
 function ps1_exit_status {
     [ "$2" ] && [ "$__ps1_cmd" = "$2" ] && echo "${ps1_exit_colors% *}:" && return
     [ "$__ps1_noexec" ] && echo "${ps1_exit_colors% *}:" && return
-    [ "$1" = 0 ] && echo "${ps1_exit_colors% *}:"|| echo "${ps1_exit_colors#* }:$1"
+    [ "$1" = 0 ] && echo "${ps1_exit_colors% *}:"|| echo "${ps1_exit_colors#* }///error:$1"
 }
 
 function ps1_dfcheck {
@@ -256,8 +267,8 @@ function ps1_dfcheck {
         if (used >= lim[1]+0) { warn++; msg=msg" "fs":"used"%"pct}
     }
     END {
-        if (alert) { print("red/white:"msg); exit(1); }
-        if (warn) { print("yellow/black:"msg); exit(1); }
+        if (alert) { print("red/white//error:"msg); exit(1); }
+        if (warn) { print("yellow/black//warn:"msg); exit(1); }
     }'
 }
 # zsh 
@@ -304,8 +315,8 @@ function ps1_freemem {
             split("K M G T P E Z Y", suff)
             if (avail) free = avail
             if (free=="") exit(1)
-            if (free<lim[2]*1024) color = "red"
-            else if (free<lim[1]*1024) color = "yellow/black"
+            if (free<lim[2]*1024) color = "red///error"
+            else if (free<lim[1]*1024) color = "yellow/black//warn"
             else color = "lblack"
             for(i=1;i<=length(suff);i++) {
                 if (free > 1024) free/=1024
@@ -330,8 +341,8 @@ function ps1_loadavg {
     load=${load%% *}
     loadint=${load%.*}
     [ ! "$load" ] && return 
-    [ $loadint -ge ${ps1_loadlimits#* } ] && echo "red:$load" && return
-    [ $loadint -ge ${ps1_loadlimits% *} ] && echo "yellow/black:$load" && return
+    [ $loadint -ge ${ps1_loadlimits#* } ] && echo "red///error:$load" && return
+    [ $loadint -ge ${ps1_loadlimits% *} ] && echo "yellow/black//warn:$load" && return
     echo "green:$load"
 }
 
@@ -396,23 +407,33 @@ function ps1_prompt {
         print(prompt " ")
     }' "$@"
 }
-
+# work in prog
 function ps1_style
 {
+    case "$1" in
+        parallel) p=${ps1_nfstyle//\(/U};p=${p//\)/U};;
+        lego) p=${ps1_nfstyle//\(/n};p=${p//\)/n};;
+    esac
+    echo $p
+}
+
+function ps1_display
+{
     [ "$1" = -h ] && {
-        echo "usage: ps1_style <style>"
-        echo "    <style>: nerd, powerline, nofont, ascii"
+        echo "usage: ps1_display <option>"
+        echo "    <option>: nerdicons, nerd, powerline, nofont, ascii"
         return
     }
 
     case "$1" in
-        "nerd")      ps1_nopw=0;;
-        "powerline") ps1_nopw=1;;
-        "nofont")    ps1_nopw=2;;
-        "ascii")     ps1_nopw=3;;
+        "nerdicons") ps1_nopw=0;;
+        "nerd")      ps1_nopw=1;;
+        "powerline") ps1_nopw=2;;
+        "nofont")    ps1_nopw=3;;
+        "ascii")     ps1_nopw=4;;
         *)           return;;
     esac
-    ps1_style="$1"
+    ps1_display="$1"
     ps1_set
     return 0
 }
@@ -635,7 +656,7 @@ EOF$$
     "
 }
 
-ps1_style "$ps1_style"
+ps1_display "$ps1_display"
 
 if [ "$ZSH_VERSION" ] ; then
     autoload -Uz add-zsh-hook
