@@ -98,7 +98,7 @@ function ps1_pwline {
             icons["error"] = ""
             icons["ok"] = ""
         }
-        symbols[0] = "_                                                                          "
+        symbols[0] = "_                                                                          "
         symbols[1] = symbols[0]
         symbols[2] = "_                                                                          "
         symbols[3] = "_ • • • •   • • • •   • • • •   • • • •   • • • •  • • • •   • • • •   • • • •  • • • •   • • • •   • • • •   • • • •   • • • •"
@@ -416,12 +416,12 @@ function ps1_style
     typeset p p1 p2
     case "$1" in
         atarist) p=${ps1_nfstyle//[\(\)]\//u/};p=${p//[\)>]/U};;
-        lego)  p=${ps1_nfstyle//[\)>]/C};;
+        lego)  p=${ps1_nfstyle//[\)>]/C};p1=${p%|*};p2=${p#*|};p="$p1|${p2//[\(]/C}";;
         matrix)  p=${ps1_nfstyle//[\)]/M};p1=${p%|*};p2=${p#*|};p="$p1|${p2//[\(]/m}";;
         blur) p=${ps1_nfstyle//[\)]/D};p1=${p%|*};p2=${p#*|};p="$p1|${p2//[\(]/d}";;
         flame) p=${ps1_nfstyle//[\)]/F};p1=${p%|*};p2=${p#*|};p="$p1|${p2//[\(]/f}";;
         tesla) p=${ps1_nfstyle//[\)]/G};;
-        default) p=$ps1_nfstyle;;
+        island|default) p=$ps1_nfstyle;;
     esac
     [ "$1" = atarist ] || p="${p:0:$((${#p}-1))})"
     ps1_powerline="$p"
