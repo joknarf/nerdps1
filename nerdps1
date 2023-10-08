@@ -145,7 +145,7 @@ function ps1_pwline {
         fg = colinfo[i+1] == "" ? "lwhite" : colinfo[i+1]
         sepcol = colinfo[i+2]
         ico = icons[colinfo[i+3]]
-        lico = (ico) ? 1 : 0
+        lico = (ico=="") ? 0 : 1
     }
     function getbgfg(i, info) {
         bg = ""
@@ -171,10 +171,11 @@ function ps1_pwline {
                 emptywidth = columns - width -1 # avoid last column for resize
                 for(j=ARGC-1;j>i;j--) {
                     text = gettext(ARGV[j])
-                    getcols(ARGV[j])
+                    #getcols(ARGV[j])
                     if (text == "") continue
                     gsub("^ +| +$", "", text)
-                    split(text, colinfo, ":")
+                    split(ARGV[j], colinfo, ":")
+                    bg="";
                     getcols(colinfo[1])
                     if (text in sym)
                         if (emptywidth - length(gettext(ARGV[j-1])) > 3+pwidth)
@@ -200,7 +201,7 @@ function ps1_pwline {
             if (text == symbol) { bg="reset"; width+=pwidth }
             else if (text == ARGV[i]) continue
             else if (text == "") { text="";sp="";ico=""; width+=pwidth }
-            else width += length(text) + 2 + ((ico)?1:0) + pwidth
+            else width += length(text) + 2 + ((ico=="")?0:1) + pwidth
             gsub("[|]", colors[sepcol] sep[symbol] colors[fg], text)
             if (rev[symbol]) {
                 printf("%s", colors[bg] sym[symbol])
