@@ -165,7 +165,6 @@ function ps1_pwline {
         split(pcol, pcols, " ")
         printf("\r%s%s", colors["wrapoff"], colors["black"])
         for (i=1;i<ARGC;i++) {
-            symbol = ""
             text = ARGV[i]
             if (text == "|") {
                 printf("%s", colors["black"])
@@ -194,6 +193,7 @@ function ps1_pwline {
             }
             split(text, colinfo, ":")
             ico = ""
+            symbol = ""
             getbgfg(i, colinfo[1])
             text = gettext(text)
             if (text == "") continue
