@@ -21,6 +21,10 @@ cat - >$ps1_tmp <<'EOF'
 [ "$ps1_loaded" ] && return
 ps1_loaded=1
 
+ps1_nfstyle="(/auto:exit_status (/lblack:elapse (/blue:userhost )/auto:git_branch )/lblack:cwd > | (/lblue/black/blue:info (/auto:addon (/auto:dfcheck (/auto:loadavg (/auto:freemem (/blue:time )"
+ps1_nfstyle2="(/auto:exit_status (/lblack:elapse (/blue:userhost )/lblack:cwd >/auto:git_branch > | (/lblue/black/blue:info (/auto:addon (/auto:dfcheck (/auto:loadavg (/auto:freemem (/blue:time )"
+ps1_pfstyle="/auto:exit_status /lblack:elapse /blue:userhost >/auto:git_branch >/lblack:cwd > | </lblue/black/blue:info </auto:addon </auto:dfcheck </auto:loadavg </auto:freemem </blue:time >" 
+
 # overiddable vars in your env or .nerdrc
 #: ${ps1_info_eval:='$(echo uid:$(id -u))'}
 : ${ps1_info_vars:='client_id ORACLE_SID {VIRTUAL_ENV##*[/\\\\]}'}
@@ -37,9 +41,6 @@ ps1_loaded=1
 : ${ps1_powerline:=$ps1_nfstyle}
 : ${ps1_display:=nerd} # nerdicons/powerline/nofont/ascii
 
-ps1_nfstyle="(/auto:exit_status (/lblack:elapse (/blue:userhost )/auto:git_branch )/lblack:cwd > | (/lblue/black/blue:info (/auto:addon (/auto:dfcheck (/auto:loadavg (/auto:freemem (/blue:time )"
-ps1_nfstyle2="(/auto:exit_status (/lblack:elapse (/blue:userhost )/lblack:cwd >/auto:git_branch > | (/lblue/black/blue:info (/auto:addon (/auto:dfcheck (/auto:loadavg (/auto:freemem (/blue:time )"
-ps1_pfstyle="/auto:exit_status /lblack:elapse /blue:userhost >/auto:git_branch >/lblack:cwd > | </lblue/black/blue:info </auto:addon </auto:dfcheck </auto:loadavg </auto:freemem </blue:time >" 
 
 
 #=========================
