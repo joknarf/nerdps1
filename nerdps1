@@ -23,7 +23,6 @@ ps1_loaded=1
 
 # overiddable vars in your env or .nerdrc
 #: ${ps1_info_eval:='$(echo uid:$(id -u))'}
-: ${ps1_nopw:=0}        # disable powerline symbols :-(
 : ${ps1_info_vars:='client_id ORACLE_SID {VIRTUAL_ENV##*[/\\\\]}'}
 : ${ps1_info:=''}       # var to add variables to info zone  
 : ${ps1_git_status:=1}  # 0 to disable git status
@@ -35,16 +34,14 @@ ps1_loaded=1
 : ${ps1_loadlimits:="10 20"}
 : ${ps1_memlimits:="300 100"}
 : ${ps1_url:=https://raw.githubusercontent.com/joknarf/nerdps1/main/nerdps1}
+: ${ps1_powerline:=$ps1_nfstyle}
+: ${ps1_display:=nerd} # powerline/nofont/ascii
+
 ps1_nfstyle="(/auto:exit_status (/lblack:elapse (/blue:userhost )/auto:git_branch )/lblack:cwd > | (/lblue/black/blue:info (/auto:addon (/auto:dfcheck (/auto:loadavg (/auto:freemem (/blue:time )"
 ps1_nfstyle2="(/auto:exit_status (/lblack:elapse (/blue:userhost )/lblack:cwd >/auto:git_branch > | (/lblue/black/blue:info (/auto:addon (/auto:dfcheck (/auto:loadavg (/auto:freemem (/blue:time )"
-ps1_pfstyle="/auto:exit_status /lblack:elapse /blue:userhost >/auto:git_branch >/lblack:cwd > | </lblue/black/blue:info </auto:addon </auto:dfcheck </auto:loadavg </auto:freemem </blue:time >"
-ps1_winstyle="(/auto:exit_status (/lblack:elapse (/blue:userhost )/auto:git_branch )/lblack:cwd > | (/lblue/black/blue:info (/auto:freemem (/blue:time )"
-[ "$WINDIR" ] && : ${ps1_powerline:=$ps1_winstyle}
-: ${ps1_powerline:="$ps1_nfstyle"}
-alias ps1_pf='ps1_nopw=0;ps1_powerline="$ps1_pfstyle";ps1_set'
-alias ps1_nf='ps1_nopw=0;ps1_powerline="$ps1_nfstyle";ps1_set'
-alias ps1_nofont='ps1_nopw=1'
-alias ps1_ascii='ps1_nopw=2'
+ps1_pfstyle="/auto:exit_status /lblack:elapse /blue:userhost >/auto:git_branch >/lblack:cwd > | </lblue/black/blue:info </auto:addon </auto:dfcheck </auto:loadavg </auto:freemem </blue:time >" 
+
+
 #=========================
 type typeset >/dev/null 2>&1 || alias typeset=local # ash 
 [ -x /bin/nawk ] && ps1_awk=nawk || ps1_awk=awk
@@ -94,21 +91,20 @@ function ps1_pwline {
     COLUMNS=${COLUMNS#* }
     : ${ps1_colors:="blue lblack green yellow/black lblue/black"} # just some defaults
     $ps1_awk -v pcol="$ps1_colors" -v columns="$COLUMNS" -v nopw="$ps1_nopw" -v kshbug="$ps1_kshbug" '
-    function init_symbols(  s) {
-        if (nopw) {
-            s = "•" #◦•🢖🞂
-            if (nopw==2) s=""
-            gpwidth = length(s)
-            sym[">"]=s; sym[")"]=s; sym["<"]=s; sym["("]=s
-            sep[""]=s; rev[""]=s
-            pwidth = 1
-            return
+    function init_symbols(  symbols,ts) {
+        symbols[0] = "_                                                                          "
+        symbols[1] = "_                                                                          "
+        symbols[2] = "_ • • • •   • • • •   • • • •   • • • •   • • • •  • • • •   • • • •   • • • •  • • • •   • • • •   • • • •   • • • •   • • • •"
+        symbols[3] = ""
+        chars   =      ">   <     )   (     L   l      U  u     F   f    D   d     M   m     G  g     P   p     B   b     N   n     C   c     R   r"
+        split(symbols[nopw],ts)
+        gpwidth=length(ts[2])
+        split(chars,tc)
+        for (i in tc) {
+            if (ARGV[1]=="symbols") print(tc[i],ts[i*2],ts[i*2+1])
+            sym[tc[i]] = ts[i*2]; sep[tc[i]] = ts[i*2+1]; rev[tc[i]] = (i+1)%2
         }
-        gpwidth=1
-        sym[">"] = ""; sep[">"] = ""; rev[">"]=0 # \ue0b0 \ue0b1
-        sym[")"] = ""; sep[")"] = ""; rev[")"]=0 # \ue0b4 \ue0b5
-        sym["<"] = ""; sep["<"] = ""; rev["<"]=1 # \ue0b2 \ue0b3
-        sym["("] = ""; sep["("] = ""; rev["("]=1 # \ue0b6 \ue0b7
+        if (ARGV[1]=="symbols") exit(0)
     }
     function init_colors() {
         csi = "\033["
@@ -324,6 +320,7 @@ function ps1_freemem {
 }
 
 function ps1_loadavg {
+    [ "$WINDIR" ] && return #too long on emulated unix
     typeset load loadint
     [ -r /proc/loadavg ] && load=$(< /proc/loadavg) || {
         load=$(LANG=C uptime)
@@ -398,6 +395,26 @@ function ps1_prompt {
         print(")"post)
         print(prompt " ")
     }' "$@"
+}
+
+function ps1_style
+{
+    [ "$1" = -h ] && {
+        echo "usage: ps1_style <style>"
+        echo "    <style>: nerd, powerline, nofont, ascii"
+        return
+    }
+
+    case "$1" in
+        "nerd")      ps1_nopw=0;;
+        "powerline") ps1_nopw=1;;
+        "nofont")    ps1_nopw=2;;
+        "ascii")     ps1_nopw=3;;
+        *)           return;;
+    esac
+    ps1_style="$1"
+    ps1_set
+    return 0
 }
 
 # create powerline prompt
@@ -617,7 +634,8 @@ EOF$$
         exec sh -c \"\$(ps1_powerline='$ps1_powerline' ps1_login $loginopts \$USER)\"
     "
 }
-ps1_set
+
+ps1_style "$ps1_style"
 
 if [ "$ZSH_VERSION" ] ; then
     autoload -Uz add-zsh-hook
