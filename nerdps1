@@ -6,7 +6,7 @@
 : ${USER:=$LOGNAME}
 export TMPDIR=/tmp
 # check /tmp full
-head -c 21000 /dev/zero >/tmp/.nerdps1.$USER 2>/dev/null || {
+head -c 25000 /dev/zero >/tmp/.nerdps1.$USER 2>/dev/null || {
     export TMPPREFIX=/var/tmp/zsh
     export TMPDIR=/var/tmp
 }
@@ -580,7 +580,7 @@ function pssh {
     [ "$1" ] && [ -r "$1" ] && custom=$1 && shift
     ssh -t "$remote" "$@" "
         export TMPDIR=/tmp
-        head -c 21000 /dev/zero >/tmp/.nerdps1.\$USER 2>/dev/null || export TMPDIR=/var/tmp
+        head -c 25000 /dev/zero >/tmp/.nerdps1.\$USER 2>/dev/null || export TMPDIR=/var/tmp
         export TMPPREFIX=\$TMPDIR/zsh
         ps1_tmp=\$TMPDIR/.nerdps1.\$USER
         cat - <<'EOF$$' >\$ps1_tmp
@@ -605,7 +605,7 @@ function pssh2 {
     [ -r $TMPDIR/.nerdps1.$USER.profile/.nerdrc ] && custom=$TMPDIR/.nerdps1.$USER.profile/.nerdrc
     [ -r ~/.nerdrc ] && custom=~/.nerdrc
     [ "$1" ] && [ -r "$1" ] && custom=$1 && shift
-    echo "RemoteCommand head -c 21000 /dev/zero >/tmp/.nerdps1.\$USER 2>/dev/null && export TMPDIR=/tmp || export TMPDIR=/var/tmp;TMPPREFIX=\$TMPDIR/zsh;. <(echo $(gzip -c <<EOF_$$ |base64 -w 0
+    echo "RemoteCommand head -c 25000 /dev/zero >/tmp/.nerdps1.\$USER 2>/dev/null && export TMPDIR=/tmp || export TMPDIR=/var/tmp;TMPPREFIX=\$TMPDIR/zsh;. <(echo $(gzip -c <<EOF_$$ |base64 -w 0
 ps1_tmp=\$TMPDIR/.nerdps1.\$USER
 cat - <<'EOF__$$' >\$ps1_tmp
 $(< $ps1_tmp)
@@ -644,7 +644,7 @@ function psshu {
     [ -r ~/.nerdrc ] && custom=~/.nerdrc
     [ "$1" ] && [ -r "$1" ] && custom=$1 && shift
     ssh -t $remote "$@" "
-        head -c 21000 /dev/zero >/tmp/.nerdps1.\$USER 2>/dev/null && export TMPDIR=/tmp|| export TMPDIR=/var/tmp
+        head -c 25000 /dev/zero >/tmp/.nerdps1.\$USER 2>/dev/null && export TMPDIR=/tmp|| export TMPDIR=/var/tmp
         export TMPPREFIX=\$TMPDIR/zsh
         ps1_tmp=\$TMPDIR/.nerdps1.\$USER
         . <(curl -Ls -m 6 $ps1_url)
