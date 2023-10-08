@@ -414,7 +414,7 @@ function ps1_prompt {
 function ps1_style
 {
     [ "$1" = "-h" ] && echo "usage: ps1_style <style>
-    <style> : atarist, lego, blur, blur2, flame, tesla" && return
+    <style> : atarist, lego, blur, blur2, flame, tesla, powerline, island" && return
     typeset p p1 p2
     case "$1" in
         atarist) p=${ps1_nfstyle//[\(\)]\//u/};p=${p//[\)>]/U};;
