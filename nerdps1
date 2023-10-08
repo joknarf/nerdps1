@@ -102,7 +102,7 @@ function ps1_pwline {
         symbols[2] = "_                                                                          "
         symbols[3] = "_ • • • •   • • • •   • • • •   • • • •   • • • •  • • • •   • • • •   • • • •  • • • •   • • • •   • • • •   • • • •   • • • •"
         symbols[4] = ""
-        chars   =      ">   <     )   (     L   l     U   u s    F   f    D   d     M   m     G  g     P   p     B   b     N   n     C   c     R   r"
+        chars   =      ">   <     )   (     L   l     U   u     F   f    D   d     M   m     G  g     P   p     B   b     N   n     C   c     R   r"
         split(symbols[nopw],ts)
         gpwidth=length(ts[2])
         split(chars,tc)
@@ -407,14 +407,23 @@ function ps1_prompt {
         print(prompt " ")
     }' "$@"
 }
-# work in prog
+
 function ps1_style
 {
+    [ "$1" = "" -o "$1" = -h ] && echo "usage: ps1_style <style>
+    <style> : atarist, lego, blur, blur2, flame, tesla" && return
+    typeset p
     case "$1" in
-        parallel) p=${ps1_nfstyle//\(/U};p=${p//\)/U};;
-        lego) p=${ps1_nfstyle//\(/n};p=${p//\)/n};;
+        atarist) p=${ps1_nfstyle//[(]/u};p=${p//[)>]/U};;
+        lego)  p=${ps1_nfstyle//[)>]/C};;
+        blur)  p=${ps1_nfstyle//[)]/M};; #p=${p//[(]/m};;
+        blur2) p=${ps1_nfstyle//[)]/D};; #p=${p//[()]/d};;
+        flame) p=${ps1_nfstyle//[)]/F};; #p=${p//[()]/f};;
+        tesla) p=${ps1_nfstyle//[)]/G};;
     esac
-    echo $p
+    [ "$1" != atarist ] && p="${p:0:$((${#p}-1))})"
+    ps1_powerline="$p"
+    ps1_set
 }
 
 function ps1_display
@@ -434,7 +443,6 @@ function ps1_display
         *)           return;;
     esac
     ps1_display="$1"
-    ps1_set
     return 0
 }
 
@@ -657,6 +665,7 @@ EOF$$
 }
 
 ps1_display "$ps1_display"
+[ "$ps1_style" ] && ps1_style "$ps1_style" || ps1_set
 
 if [ "$ZSH_VERSION" ] ; then
     autoload -Uz add-zsh-hook
