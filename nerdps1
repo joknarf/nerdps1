@@ -104,7 +104,7 @@ function ps1_pwline {
         symbols[4] = ""
         chars   =      ">   <     )   (     L   l     U   u     F   f    D   d     M   m     G  g     P   p     B   b     N   n     C   c     R   r"
         split(symbols[nopw],ts)
-        gpwidth=length(ts[2])
+        gpwidth = (ts[2]) ? 1 : 0
         split(chars,tc)
         for (i in tc) {
             if (ARGV[1]=="symbols") print(tc[i],ts[i*2],ts[i*2+1])
@@ -144,7 +144,7 @@ function ps1_pwline {
         fg = colinfo[i+1] == "" ? "lwhite" : colinfo[i+1]
         sepcol = colinfo[i+2]
         ico = icons[colinfo[i+3]]
-        lico = length(ico)
+        lico = (ico) ? 1 : 0
     }
     function getbgfg(i, info) {
         bg = ""
@@ -199,7 +199,7 @@ function ps1_pwline {
             if (text == symbol) { bg="reset"; width+=pwidth }
             else if (text==ARGV[i]) continue
             else if (text == "") { text="";sp="";ico=""; width+=pwidth }
-            else width += length(text) + 2 + length(ico) + pwidth
+            else width += length(text) + 2 + ((ico)?1:0) + pwidth
             gsub("[|]", colors[sepcol] sep[symbol] colors[fg], text)
             if (rev[symbol]) {
                 printf("%s", colors[bg] sym[symbol])
