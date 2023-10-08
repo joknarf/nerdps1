@@ -415,7 +415,7 @@ function ps1_style
     <style> : atarist, lego, blur, blur2, flame, tesla" && return
     typeset p p1 p2
     case "$1" in
-        atarist) p=${ps1_nfstyle//[\(]/u};p=${p//[\)>]/U};;
+        atarist) p=${ps1_nfstyle//[\(\)]\//u/};p=${p//[\)>]/U};;
         lego)  p=${ps1_nfstyle//[\)>]/C};;
         matrix)  p=${ps1_nfstyle//[\)]/M};p1=${p%|*};p2=${p#*|};p="$p1|${p2//[\(]/m}";;
         blur) p=${ps1_nfstyle//[\)]/D};p1=${p%|*};p2=${p#*|};p="$p1|${p2//[\(]/d}";;
