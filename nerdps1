@@ -165,6 +165,7 @@ function ps1_pwline {
         split(pcol, pcols, " ")
         printf("\r%s%s", colors["wrapoff"], colors["black"])
         for (i=1;i<ARGC;i++) {
+            symbol = ""
             text = ARGV[i]
             if (text == "|") {
                 printf("%s", colors["black"])
@@ -422,9 +423,10 @@ function ps1_style
         blur) p=${ps1_nfstyle//[\)]/D};p1=${p%|*};p2=${p#*|};p="$p1|${p2//[\(]/d}";;
         flame) p=${ps1_nfstyle//[\)]/F};p1=${p%|*};p2=${p#*|};p="$p1|${p2//[\(]/f}";;
         tesla) p=${ps1_nfstyle//[\)]/G};p1=${p%|*};p2=${p#*|};p="$p1|${p2//[\(]/G}";;
+        powerline) p=${ps1_nfstyle/??blue:userhost/\/blue:userhost};p=${p%?};;
         island|default) p=$ps1_nfstyle;;
     esac
-    [ "$1" = atarist ] || p="${p:0:$((${#p}-1))})"
+    [ "$1" != atarist ] && [ "$1" != powerline ] && p="${p:0:$((${#p}-1))})"
     ps1_powerline="$p"
     ps1_set
 }
