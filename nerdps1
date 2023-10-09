@@ -196,19 +196,17 @@ function ps1_pwline {
                 else for(j=0;j<emptywidth;j++) printf(" ") # printf("%*s", emptywidth, " ") not busybox compatible
                 continue
             }
-            sp = " "
             if (txt[i] == symb[i]) { bgs[i]="reset"; width+=swidth[i] }
-#            else if (text == "") { text="";sp="";ico=""; width+=pwidth }
             else width += length(txt[i]) + 2 + ((icos[i]=="")?0:1) + swidth[i]
             gsub("[|]", colors[sepc[i]] sep[symb[i]] colors[fgs[i]], txt[i])
             if (rev[symb[i]]) {
                 printf("%s", colors[bgs[i]] sym[symb[i]])
                 if (txt[i] != symb[i]) 
-                    printf("%s", colors[fgs[i]] colors["b"bgs[i]] icos[i] sp txt[i] sp colors[bgs[i]])
+                    printf("%s", colors[fgs[i]] colors["b"bgs[i]] icos[i] " " txt[i] " " colors[bgs[i]])
             } else {
                 printf("%s", colors["b"bgs[i]] sym[symb[i]])
                 if (txt[i] != symb[i])
-                    printf("%s", colors[fgs[i]] icos[i] sp txt[i] sp colors["reset_all"] colors[bgs[i]] colors["b"bgs[i]])
+                    printf("%s", colors[fgs[i]] icos[i] " " txt[i] " " colors["reset_all"] colors[bgs[i]] colors["b"bgs[i]])
             }
         }
         printf("%s%s\n", colors["reset_all"], colors["wrapon"])
