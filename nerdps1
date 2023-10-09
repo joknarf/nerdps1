@@ -129,34 +129,31 @@ function ps1_pwline {
         colors["wrapoff"] = csi "?7l"
         colors["wrapon"] = csi "?7h"
     }
-    function getcols(info,    colinfo, i) {
-        if (info == "") return
-        split(info, colinfo, "/")
-        i=1
-        if (colinfo[i] == "") { i++; pwidth = 0; }
+    function getcols(info, j,   cinfo, colinfo, i) {
+        split(info, cinfo, ":")
+        split(cinfo[1], colinfo, "/")
+        i = 1
+        if (colinfo[i] == "") { i++; swidth[j] = 0; }
         if (colinfo[i] in sym) {
-            symbol = colinfo[i++]
-            pwidth = gpwidth
+            symb[j] = colinfo[i++]
+            swidth[j] = gpwidth
         }
-        #print("\n="info, colinfo[i], i)
-        if (bg) return
-        if (colinfo[i] in colors)
-            bg = colinfo[i]
-        fg = colinfo[i+1] == "" ? "lwhite" : colinfo[i+1]
-        sepcol = colinfo[i+2]
-        ico = icons[colinfo[i+3]]
-        lico = (ico=="") ? 0 : 1
-    }
-    function getbgfg(i, info) {
-        bg = ""
-        getcols(info)
-        getcols(pcols[i])
+        if (!(colinfo[i] in colors)) {
+            print(colinfo[i], colinfo[i+1], pcols[j])
+            split(pcols[j], colinfo, "/")
+            i = 1
+        }
+        bgs[j] = colinfo[i]
+        fgs[j] = colinfo[i+1] == "" ? "lwhite" : colinfo[i+1]
+        sepc[j] = colinfo[i+2]
+        icos[j] = icons[colinfo[i+3]]
     }
     function gettext(info) {
         sub("[^:]*:", "", info)
         gsub("[|]+[|]", "|", info)
         gsub("^[|]|[|]$","", info)
         gsub("[|]", " | ", info)
+        gsub("^ +| +$", "", info)
         return info
     }
     BEGIN {
@@ -164,54 +161,55 @@ function ps1_pwline {
         init_symbols()
         split(pcol, pcols, " ")
         printf("\r%s%s", colors["wrapoff"], colors["black"])
+        j=1
         for (i=1;i<ARGC;i++) {
-            text = ARGV[i]
-            if (text == "|") {
+            if (ARGV[i] == "|" || (ARGV[i] in sym)) {
+                txt[j] = ARGV[i]
+                symb[j] = ARGV[i]
+                swidth[j] = gpwidth
+                j++
+                continue
+            }
+            text = gettext(ARGV[i])
+            if (text == "" || text == ARGV[i]) continue
+            txt[j] = text
+            getcols(ARGV[i], j)
+            j++
+        }
+        txtc = j
+        for (i=1;i<txtc;i++) {
+            if (txt[i] == "" ) continue
+            if (txt[i] == "|") {
                 printf("%s", colors["black"])
                 emptywidth = columns - width -1 # avoid last column for resize
-                for(j=ARGC-1;j>i;j--) {
-                    text = gettext(ARGV[j])
-                    #getcols(ARGV[j])
-                    if (text == "") continue
-                    gsub("^ +| +$", "", text)
-                    split(ARGV[j], colinfo, ":")
-                    bg="";
-                    getcols(colinfo[1])
-                    if (text in sym)
-                        if (emptywidth - length(gettext(ARGV[j-1])) > 3+pwidth)
+                for(j=txtc-1;j>i;j--) {
+                    if (txt[j] in sym)
+                        if (emptywidth - length(txt[j-1]) > 3+swidth[j])
                             emptywidth--
                         else
-                            delete ARGV[j]
-                    else if (emptywidth - length(text) - lico > 2+pwidth && text != ARGV[j])
-                        emptywidth -= length(text) + 2 + lico + pwidth
+                            delete txt[j]
+                    else if (emptywidth - length(txt[j]) - ((icos[j]=="")?0:1) > 2+swidth[j])
+                        emptywidth -= length(txt[j]) + 2 + ((icos[j]=="")?0:1) + swidth[j]
                     else
-                        delete ARGV[j]
+                        delete txt[j]
                 }
                 if (kshbug=="1") {printf("\n"); system("tput cuf " width+emptywidth)}
                 else for(j=0;j<emptywidth;j++) printf(" ") # printf("%*s", emptywidth, " ") not busybox compatible
                 continue
             }
-            split(text, colinfo, ":")
-            ico = ""
-            symbol = ""
-            getbgfg(i, colinfo[1])
-            text = gettext(text)
-            if (text == "") continue
-            gsub("^ +| +$", "", text)
             sp = " "
-            if (text == symbol) { bg="reset"; width+=pwidth }
-            else if (text == ARGV[i]) continue
-            else if (text == "") { text="";sp="";ico=""; width+=pwidth }
-            else width += length(text) + 2 + ((ico=="")?0:1) + pwidth
-            gsub("[|]", colors[sepcol] sep[symbol] colors[fg], text)
-            if (rev[symbol]) {
-                printf("%s", colors[bg] sym[symbol])
-                if (text != symbol) 
-                    printf("%s", colors[fg] colors["b"bg] ico sp text sp colors[bg])
+            if (txt[i] == symb[i]) { bgs[i]="reset"; width+=swidth[i] }
+#            else if (text == "") { text="";sp="";ico=""; width+=pwidth }
+            else width += length(txt[i]) + 2 + ((icos[i]=="")?0:1) + swidth[i]
+            gsub("[|]", colors[sepc[i]] sep[symb[i]] colors[fgs[i]], txt[i])
+            if (rev[symb[i]]) {
+                printf("%s", colors[bgs[i]] sym[symb[i]])
+                if (txt[i] != symb[i]) 
+                    printf("%s", colors[fgs[i]] colors["b"bgs[i]] icos[i] sp txt[i] sp colors[bgs[i]])
             } else {
-                printf("%s", colors["b"bg] sym[symbol])
-                if (text != symbol)
-                    printf("%s", colors[fg] ico sp text sp colors["reset_all"] colors[bg] colors["b"bg])
+                printf("%s", colors["b"bgs[i]] sym[symb[i]])
+                if (txt[i] != symb[i])
+                    printf("%s", colors[fgs[i]] icos[i] sp txt[i] sp colors["reset_all"] colors[bgs[i]] colors["b"bgs[i]])
             }
         }
         printf("%s%s\n", colors["reset_all"], colors["wrapon"])
