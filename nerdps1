@@ -183,8 +183,8 @@ function ps1_pwline {
                 emptywidth = columns - width -1 # avoid last column for resize
                 for(j=txtc-1;j>i;j--) {
                     if (txt[j] in sym)
-                        if (emptywidth - length(txt[j-1]) > 3+swidth[j])
-                            emptywidth--
+                        if (emptywidth - length(txt[j-1]) > 2+swidth[j])
+                            emptywidth -= swidth[j]
                         else
                             delete txt[j]
                     else if (emptywidth - length(txt[j]) - ((icos[j]=="")?0:1) > 2+swidth[j])
