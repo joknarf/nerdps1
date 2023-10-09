@@ -94,8 +94,8 @@ function ps1_pwline {
     $ps1_awk -v pcol="$ps1_colors" -v columns="$COLUMNS" -v nopw="$ps1_nopw" -v kshbug="$ps1_kshbug" '
     function init_symbols(  symbols,ts) {
         if (nopw==0) {
-            icons["warn"] = ""
-            icons["error"] = ""
+            icons["warn"] = ""#
+            icons["error"] = ""#
             icons["ok"] = ""
         }
         symbols[0] = "_                                                                          "
