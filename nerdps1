@@ -139,7 +139,6 @@ function ps1_pwline {
             swidth[j] = gpwidth
         }
         if (!(colinfo[i] in colors)) {
-            print(colinfo[i], colinfo[i+1], pcols[j])
             split(pcols[j], colinfo, "/")
             i = 1
         }
