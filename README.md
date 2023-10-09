@@ -33,6 +33,13 @@ Following information displayed:
 * Available memory (colorized default `ps1_memlimits` "300 100" MB)
 * Time
   
+## choose your style
+set `ps1_style` variable to available styles in your .nerdrc  
+You can test using `ps1_style` function:
+
+![image](https://github.com/joknarf/nerdps1/assets/10117818/376ec6a1-6573-4564-8c62-9f1312baa085)
+
+
 
 ## persistent prompt across sudo
 
