@@ -37,8 +37,7 @@ Following information displayed:
 set `ps1_style` variable to available styles in your .nerdrc  
 You can test using `ps1_style` function:
 
-![image](https://github.com/joknarf/nerdps1/assets/10117818/376ec6a1-6573-4564-8c62-9f1312baa085)
-
+![image](https://github.com/joknarf/nerdps1/assets/10117818/f8d32297-73f4-4827-9802-b635c9d9a481)
 
 
 ## persistent prompt across sudo
