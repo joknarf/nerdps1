@@ -1,6 +1,7 @@
 #!/bin/bash
 [ "$1" = activate ] && unset ps1_loaded && awk 'NR>2' $0 && exit 0
 [ "$1" = reload ] && unset ps1_loaded
+[ "$1" = login ] && unset ps1_loaded
 [ "$ps1_loaded" ] && return
 : ${USER:=$USERNAME}
 : ${USER:=$LOGNAME}
@@ -18,6 +19,7 @@ cat - >$ps1_tmp <<'EOF'
 # Powerline prompt with AWK (bash/zsh/ksh)
 # echo "loading $ps1_tmp" >&2
 [ "$1" = reload ] && unset ps1_loaded
+[ "$1" = login ] && unset ps1_loaded
 [ "$ps1_loaded" ] && return
 ps1_loaded=1
 
