@@ -1,7 +1,6 @@
 #!/bin/bash
 [ "$1" = activate ] && unset ps1_loaded && awk 'NR>2' $0 && exit 0
-[ "$1" = reload ] && unset ps1_loaded
-[ "$1" = login ] && unset ps1_loaded
+[ "$1" ] && unset ps1_loaded
 [ "$ps1_loaded" ] && return
 : ${USER:=$USERNAME}
 : ${USER:=$LOGNAME}
@@ -18,8 +17,7 @@ cat - >$ps1_tmp <<'EOF'
 # Author: Franck Jouvanceau
 # Powerline prompt with AWK (bash/zsh/ksh)
 # echo "loading $ps1_tmp" >&2
-[ "$1" = reload ] && unset ps1_loaded
-[ "$1" = login ] && unset ps1_loaded
+[ "$1" ] && unset ps1_loaded
 [ "$ps1_loaded" ] && return
 ps1_loaded=1
 
@@ -655,13 +653,11 @@ function psshu {
         head -c 25000 /dev/zero >/tmp/.nerdps1.\$USER 2>/dev/null && export TMPDIR=/tmp|| export TMPDIR=/var/tmp
         export TMPPREFIX=\$TMPDIR/zsh
         ps1_tmp=\$TMPDIR/.nerdps1.\$USER
-        #. <(curl -Ls -m 6 $ps1_url)
         mkdir -p \$ps1_tmp.profile
         cat - <<'EOF$$' >\$ps1_tmp.profile/.nerdrc
 $([ "$custom" ] && cat "$custom")
 EOF$$
         . <(curl -Ls -m 6 $ps1_url) login $loginopts \$USER
-        #exec sh -c \"\$(ps1_powerline='$ps1_powerline' ps1_login $loginopts \$USER)\"
     "
 }
 
