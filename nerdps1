@@ -525,7 +525,7 @@ function ps1_zshinit {
 
 # build profile according to user shell
 function ps1_login {
-    typeset profdir="$TMPDIR/.nerdps1.$USER.profile"
+    typeset profdir="$TMPDIR/.nerdps1.$USER.profile" exec=exec
     mkdir -p $profdir
     [[ $ps1_tmp != *.$USER ]] && cp $ps1_tmp.profile/.nerdrc $profdir 2>/dev/null
     typeset nerdps1="ps1_tmp=$ps1_tmp;export TMPDIR=$TMPDIR;. $ps1_tmp reload"
@@ -536,7 +536,8 @@ function ps1_login {
         [ "$i" = "-g" ] && gprofile=false && shift
         [ "$i" = "-u" ] && uprofile=false && shift
         [ "$i" = "-p" ] && nerdps1=':' && shift
-        [ "$i" = "-b" ] && ps1_shell=bash && shift 
+        [ "$i" = "-b" ] && ps1_shell=bash && shift
+        [ "$i" = "-e" ] && exec=""
     done
     [ "$1" = "$USER" ] || cp ~/.nerdrc $profdir 2>/dev/null
     [ "$ps1_shell" ] || ps1_shell=$(ps1_usershell $1)
@@ -550,11 +551,11 @@ function ps1_login {
     ln -s .rc $profdir/.zshrc 2>/dev/null
     case "$ps1_shell" in
         */*ksh) ps1_kshinit >>"$profdir/.rc"
-             echo "ENV=$profdir/.rc exec $ps1_shell -i";;
+             echo "ENV=$profdir/.rc $exec $ps1_shell -i";;
         */zsh) ps1_zshinit >>"$profdir/.rc"  
-             echo "ZDOTDIR=$profdir exec $ps1_shell -di";;
+             echo "ZDOTDIR=$profdir $exec $ps1_shell -di";;
         *)   ps1_bashinit >>"$profdir/.rc"
-             echo "exec bash --init-file $profdir/.rc"
+             echo "$exec bash --init-file $profdir/.rc"
              ;;
     esac
     echo "$load_custom;$nerdps1" >>"$profdir/.rc"
@@ -573,7 +574,7 @@ function psudo {
     [ "$1" = "-h" ] && ps1_phelp "psudo [-b] [-g] [-u] [<user>]" && return
     ps1_user="$*";ps1_user=${ps1_user##*-[a-z] };ps1_user=${ps1_user% *}
     : ${ps1_user:=root}
-    sudo -u "$ps1_user" -H sh -c "$(ps1_login "$@")"
+    sudo -u "$ps1_user" -H $(ps1_login -e "$@")
 }
 
 # ssh connect get nerdps1 from local copy
