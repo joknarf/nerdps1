@@ -626,6 +626,7 @@ function pssh2 {
 }
 
 # ssh connect get nerdps1 from local copy using ssh config
+# Needs OpenSSH 7.6
 function pssh3 {
     [ "$1" = "" -o "$1" = "-h" ] && ps1_phelp "pssh2 [-b] [-g] [-u] [<user>@]<host> [<ssh options>]" && return
     typeset loginopts remote customenv i conf=false ssh_config=$TMPDIR/.nerdps1.$USER.ssh
@@ -639,13 +640,13 @@ function pssh3 {
     IFS=$'\n'
     typeset noconf=true
     set -- $(for i in "$@";do
-        $conf && { noconf=false; conf=false; cat $i >>$ssh_config; continue; }
+        $conf && { noconf=false; conf=false; echo "Include $i" >>$ssh_config; continue; }
         [ "$i" = '-F' ] && conf=true && continue
         echo "$i"
     done)
     IFS="$OIFS"
     # add user ssh config if no -F option
-    $noconf && [ -r ~/.ssh/config ] && cat ~/.ssh/config >>$ssh_config
+    $noconf && [ -r ~/.ssh/config ] && echo "Include ~/.ssh/config" >>$ssh_config
     ssh -t "$remote" -F $ssh_config "$@"
 }
 
