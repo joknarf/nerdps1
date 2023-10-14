@@ -594,7 +594,7 @@ function ps1_sshcmd
         export TMPPREFIX=\$TMPDIR/zsh
         ps1_tmp=\$TMPDIR/.nerdps1.\$USER
         cat - <<'EOF$$' >\$ps1_tmp
-$(< $ps1_tmp)
+$(cat $ps1_tmp)
 EOF$$
 	    mkdir -p \$ps1_tmp.profile
         cat - <<'EOF$$' >\$ps1_tmp.profile/.nerdrc
