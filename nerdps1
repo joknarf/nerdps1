@@ -110,7 +110,7 @@ function ps1_login {
         [ "$i" = "-p" ] && shift && nerdps1=':'
         [ "$i" = "-b" ] && shift && ps1_shell=bash
         [ "$i" = "-e" ] && shift && exec=""
-        [ "$i" = "-l" ] && shift && rm $profdir/.nerdrc 2>/dev/null
+        [ "$i" = "-l" ] && shift #&& rm $profdir/.nerdrc 2>/dev/null
     done
     [ "$1" = "$USER" ] || cp ~/.nerdrc $profdir 2>/dev/null
     [ "$ps1_shell" ] || ps1_shell=$(ps1_usershell $1)
