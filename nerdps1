@@ -629,23 +629,27 @@ function pssh2 {
 # Needs OpenSSH 7.6
 function pssh3 {
     [ "$1" = "" -o "$1" = "-h" ] && ps1_phelp "pssh2 [-b] [-g] [-u] [<user>@]<host> [<ssh options>]" && return
-    typeset loginopts remote customenv opts ssh_config=$TMPDIR/.nerdps1.$USER.ssh
+    typeset loginopts remote customenv opts ssh_config=$TMPDIR/.nerdps1.$USER.ssh argf=false
     for i in "$@";do [[ $i = -* ]] || break;loginopts="$loginopts $i";shift;done
     remote=$1
     shift
     [ "$1" ] && [ -r "$1" ] && customenv=$1 && shift
     (umask 077;echo "RemoteCommand . <(echo $(ps1_sshcmd| gzip -c| base64 $ps1_b64opt) |base64 -d|gzip -dc)" >$ssh_config)
     # include ssh config if -F ssh option
-    opts=" $* "
-    sshc=${opts##* -F};sshc=${sshc# };sshc=${sshc%% *}
-    [ "$sshc" ] && { # not managing space in params
+    for arg in "$@";do
+       shift
+       [ "$arg" = -F ] && argf=true && continue
+       $argf && argf=false && sshc=$arg && continue
+       [[ "$arg" == -F* ]] && sshc=${arg#-F} && continue
+       set -- "$@" $arg
+    done
+    [ "$sshc" ] && {
         [ -r "$sshc" ] && cat "$sshc" >>$ssh_config 2>/dev/null
-        opts=$(echo "${opts/ -F / -F}" |sed -e 's/ -F[^ ]*//')
-        ssh -t "$remote" -F $ssh_config $opts
     } || { # add user ssh config if no -F option
         [ -r ~/.ssh/config ] && cat ~/.ssh/config >>$ssh_config
-        ssh -t "$remote" -F $ssh_config "$@"
     }
+    ssh -t "$remote" -F $ssh_config "$@"
+
 }
 
 # ssh connect get nerdps1 from $ps1_url
