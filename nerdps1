@@ -582,7 +582,8 @@ function psudo {
 
 function ps1_sshcmd
 {
-    typeset loginopts="$1" customenv="$2" custom
+    typeset loginopts="$1" customenv="$2" nerdps1="$3" custom
+    [ "$nerdps1" ] || nerdps1='$ps1_tmp'
     [ -r $TMPDIR/.nerdps1.$USER.profile/.nerdrc ] && custom=$TMPDIR/.nerdps1.$USER.profile/.nerdrc
     [ -r ~/.nerdrc ] && custom=~/.nerdrc
     [ "$customenv" ] && custom=$customenv
@@ -598,7 +599,7 @@ EOF$$
         cat - <<'EOF$$' >\$ps1_tmp.profile/.nerdrc
 $([ "$custom" ] && cat "$custom")
 EOF$$
-        . \$ps1_tmp login $loginopts \$USER
+        . $nerdps1 login $loginopts \$USER
     "
 }
 
@@ -650,23 +651,12 @@ function pssh3 {
 # ssh connect get nerdps1 from $ps1_url
 function psshu {
     [ "$1" = "" -o "$1" = "-h" ] && ps1_phelp "psshu [-b] [-g] [-u] [<user>@]<host> [<ssh options>]" && return
-    typeset loginopts remote custom
+    typeset loginopts remote customenv
     for i in "$@";do [[ $i = -* ]] || break;loginopts="$loginopts $i";shift;done
     remote=$1
     shift
-    [ -r $TMPDIR/.nerdps1.$USER.profile/.nerdrc ] && custom=$TMPDIR/.nerdps1.$USER.profile/.nerdrc
-    [ -r ~/.nerdrc ] && custom=~/.nerdrc
-    [ "$1" ] && [ -r "$1" ] && custom=$1 && shift
-    ssh -t $remote "$@" "
-        head -c 25000 /dev/zero >/tmp/.nerdps1.\$USER 2>/dev/null && export TMPDIR=/tmp|| export TMPDIR=/var/tmp
-        export TMPPREFIX=\$TMPDIR/zsh
-        ps1_tmp=\$TMPDIR/.nerdps1.\$USER
-        mkdir -p \$ps1_tmp.profile
-        cat - <<'EOF$$' >\$ps1_tmp.profile/.nerdrc
-$([ "$custom" ] && cat "$custom")
-EOF$$
-        . <(curl -Ls -m 6 $ps1_url) login $loginopts \$USER
-    "
+    [ "$1" ] && [ -r "$1" ] && customenv=$1 && shift
+    ssh -t $remote "$@" "$(ps1_sshcmd "$loginopts" "$customenv" "<(curl -Ls -m 6 $ps1_url)")"
 }
 
 ps1_display "$ps1_display"
