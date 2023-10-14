@@ -105,11 +105,12 @@ function ps1_login {
     typeset gprofile=true uprofile=true ps1_shell
     for i in "$@";do
         [[ $i != -* ]] && break
-        [ "$i" = "-g" ] && gprofile=false && shift
-        [ "$i" = "-u" ] && uprofile=false && shift
-        [ "$i" = "-p" ] && nerdps1=':' && shift
-        [ "$i" = "-b" ] && ps1_shell=bash && shift
-        [ "$i" = "-e" ] && exec=""
+        [ "$i" = "-g" ] && shift && gprofile=false
+        [ "$i" = "-u" ] && shift && uprofile=false
+        [ "$i" = "-p" ] && shift && nerdps1=':'
+        [ "$i" = "-b" ] && shift && ps1_shell=bash
+        [ "$i" = "-e" ] && shift && exec=""
+        [ "$i" = "-l" ] && shift && rm $profdir/.nerdrc 2>/dev/null
     done
     [ "$1" = "$USER" ] || cp ~/.nerdrc $profdir 2>/dev/null
     [ "$ps1_shell" ] || ps1_shell=$(ps1_usershell $1)
@@ -133,7 +134,7 @@ function ps1_login {
     echo "$load_custom;$nerdps1" >>"$profdir/.rc"
 }
 
-[ "$1" = login ] && shift && eval "$(ps1_login "${@:-$USER}")"
+[ "$1" = login ] && shift && eval "$(ps1_login -l "${@:-$USER}")"
 
 function ps1_get_mseconds
 {
