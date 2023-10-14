@@ -46,6 +46,7 @@ ps1_pfstyle="/auto:exit_status /lblack:elapse /blue:userhost >/auto:git_branch >
 #=========================
 type typeset >/dev/null 2>&1 || alias typeset=local # ash 
 [ -x /bin/nawk ] && ps1_awk=nawk || ps1_awk=awk
+echo ok |base64 -w 0 >/dev/null 2>&1 && ps1_b64opt="-w0"
 
 #=========
 
@@ -621,7 +622,7 @@ function pssh2 {
     remote=$1
     shift
     [ "$1" ] && [ -r "$1" ] && customenv=$1 && shift
-    ssh -t "$remote" "$@"  ". <(echo $(ps1_sshcmd| gzip -c| base64 -w 0) |base64 -d|gzip -dc)"
+    ssh -t "$remote" "$@"  ". <(echo $(ps1_sshcmd| gzip -c| base64 $ps1_b64opt) |base64 -d|gzip -dc)"
 }
 
 # ssh connect get nerdps1 from local copy using ssh config
@@ -632,7 +633,7 @@ function pssh3 {
     remote=$1
     shift
     [ "$1" ] && [ -r "$1" ] && customenv=$1 && shift
-    echo "RemoteCommand . <(echo $(ps1_sshcmd| gzip -c| base64 -w 0) |base64 -d|gzip -dc)" >$ssh_config
+    echo "RemoteCommand . <(echo $(ps1_sshcmd| gzip -c| base64 $ps1_b64opt) |base64 -d|gzip -dc)" >$ssh_config
     # add ssh config if -F ssh option
     OIFS="$IFS"
     IFS=$'\n'
