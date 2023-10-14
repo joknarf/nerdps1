@@ -1,7 +1,7 @@
 #!/bin/bash
 [ "$1" = activate ] && unset ps1_loaded && awk 'NR>2' $0 && exit 0
 [ "$1" ] && unset ps1_loaded
-[ "$ps1_loaded" ] && return
+[ "$ps1_loaded" ] && return 0
 : ${USER:=$USERNAME}
 : ${USER:=$LOGNAME}
 export TMPDIR=/tmp
@@ -18,7 +18,7 @@ cat - >$ps1_tmp <<'EOF'
 # Powerline prompt with AWK (bash/zsh/ksh)
 # echo "loading $ps1_tmp" >&2
 [ "$1" ] && unset ps1_loaded
-[ "$ps1_loaded" ] && return
+[ "$ps1_loaded" ] && return 0
 ps1_loaded=1
 
 ps1_nfstyle="(/auto:exit_status (/lblack:elapse (/blue:userhost )/auto:git_branch )/lblack:cwd > | (/lblue/black/blue:info (/auto:addon (/auto:dfcheck (/auto:loadavg (/auto:freemem (/blue:time )"
@@ -676,6 +676,7 @@ else
 fi
 
 [ "$1" = login ] && shift && eval "$(ps1_login "$@")"
+return 0
 
 ####### end powerline-awk ########
 EOF
