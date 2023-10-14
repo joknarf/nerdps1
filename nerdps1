@@ -638,14 +638,15 @@ function pssh3 {
     # include ssh config if -F ssh option
     opts=" $* "
     sshc=${opts##* -F};sshc=${sshc# };sshc=${sshc%% *}
-    [ "$sshc" ] && {
+    [ "$sshc" ] && { # not managing space in params
         [ -r "$sshc" ] && cat "$sshc" >>$ssh_config 2>/dev/null
         opts=${opts/-F * /}
         opts=${opts/-F* /}
+        ssh -t "$remote" -F $ssh_config $opts
     } || { # add user ssh config if no -F option
         [ -r ~/.ssh/config ] && cat ~/.ssh/config >>$ssh_config
+        ssh -t "$remote" -F $ssh_config "$@"
     }
-    ssh -t "$remote" -F $ssh_config $opts
 }
 
 # ssh connect get nerdps1 from $ps1_url
