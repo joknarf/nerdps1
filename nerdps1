@@ -547,7 +547,7 @@ function ps1_set {
     else
         ps1_hostname=$(uname -n)
         ps1_hostname=${ps1_hostname%%.*}
-        [[ "$BB_ASH_VERSION$KSH_VERSION" ]] || : ${ps1_kshbug:=1}
+        [ "$BB_ASH_VERSION$KSH_VERSION" ] || : ${ps1_kshbug:=1}
         [[ "$KSH_VERSION" = *2012* ]] && : ${ps1_kshbug:=1}
         : ${ps1_kshbug:=0}
     fi
