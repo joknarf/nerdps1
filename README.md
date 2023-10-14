@@ -82,6 +82,16 @@ Invocated shell is remote user shell (bash/ksh/zsh)
 
 ![image](https://user-images.githubusercontent.com/10117818/236662496-00aafc19-a253-4a2d-a356-df900b28324c.png)
 
+* Overriding user login profile at ssh connexion with nerdps1 download
+  
+`$ ssh -t <remote> '. <(curl -s https://raw.githubusercontent.com/joknarf/nerdps1/main/nerdps1) login'`
+
+or in .ssh/config:
+```
+    RequestTTY force
+    RemoteCommand . <(curl -s https://raw.githubusercontent.com/joknarf/nerdps1/main/nerdps1) login
+```
+
 ## using .nerdrc as your custom env file
 
 Instead of passing custom env file, you can create a `~/.nerdrc` env file that will be automatically sourced after user profile and forwarded by psudo/pssh/psshu.  
