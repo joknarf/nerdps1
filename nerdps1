@@ -629,25 +629,23 @@ function pssh2 {
 # Needs OpenSSH 7.6
 function pssh3 {
     [ "$1" = "" -o "$1" = "-h" ] && ps1_phelp "pssh2 [-b] [-g] [-u] [<user>@]<host> [<ssh options>]" && return
-    typeset loginopts remote customenv i conf=false ssh_config=$TMPDIR/.nerdps1.$USER.ssh
+    typeset loginopts remote customenv opts ssh_config=$TMPDIR/.nerdps1.$USER.ssh
     for i in "$@";do [[ $i = -* ]] || break;loginopts="$loginopts $i";shift;done
     remote=$1
     shift
     [ "$1" ] && [ -r "$1" ] && customenv=$1 && shift
-    echo "RemoteCommand . <(echo $(ps1_sshcmd| gzip -c| base64 $ps1_b64opt) |base64 -d|gzip -dc)" >$ssh_config
-    # add ssh config if -F ssh option
-    OIFS="$IFS"
-    IFS=$'\n'
-    typeset noconf=true
-    set -- $(for i in "$@";do
-        $conf && { noconf=false; conf=false; echo "Include $i" >>$ssh_config; continue; }
-        [ "$i" = '-F' ] && conf=true && continue
-        echo "$i"
-    done)
-    IFS="$OIFS"
-    # add user ssh config if no -F option
-    $noconf && [ -r ~/.ssh/config ] && echo "Include ~/.ssh/config" >>$ssh_config
-    ssh -t "$remote" -F $ssh_config "$@"
+    (umask 077;echo "RemoteCommand . <(echo $(ps1_sshcmd| gzip -c| base64 $ps1_b64opt) |base64 -d|gzip -dc)" >$ssh_config)
+    # include ssh config if -F ssh option
+    opts=" $* "
+    sshc=${opts##* -F};sshc=${sshc# };sshc=${sshc%% *}
+    [ "$sshc" ] && {
+        [ -r "$sshc" ] && cat "$sshc" >>$ssh_config 2>/dev/null
+        opts=${opts/-F * /}
+        opts=${opts/-F* /}
+    } || { # add user ssh config if no -F option
+        [ -r ~/.ssh/config ] && cat ~/.ssh/config >>$ssh_config
+    }
+    ssh -t "$remote" -F $ssh_config $opts
 }
 
 # ssh connect get nerdps1 from $ps1_url
