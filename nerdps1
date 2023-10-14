@@ -580,17 +580,13 @@ function psudo {
     sudo -u "$ps1_user" -H $(ps1_login -e "$@")
 }
 
-# ssh connect get nerdps1 from local copy
-function pssh {
-    [ "$1" = "" -o "$1" = "-h" ] && ps1_phelp "pssh [-b] [-g] [-u] [<user>@]<host> [<ssh options>]" && return
-    typeset loginopts remote custom
-    for i in "$@";do [[ $i = -* ]] || break;loginopts="$loginopts $i";shift;done
-    remote=$1
-    shift
+function ps1_sshcmd
+{
+    typeset loginopts="$1" customenv="$2" custom
     [ -r $TMPDIR/.nerdps1.$USER.profile/.nerdrc ] && custom=$TMPDIR/.nerdps1.$USER.profile/.nerdrc
     [ -r ~/.nerdrc ] && custom=~/.nerdrc
-    [ "$1" ] && [ -r "$1" ] && custom=$1 && shift
-    ssh -t "$remote" "$@" "
+    [ "$customenv" ] && custom=$customenv
+    echo "
         export TMPDIR=/tmp
         head -c 25000 /dev/zero >/tmp/.nerdps1.\$USER 2>/dev/null || export TMPDIR=/var/tmp
         export TMPPREFIX=\$TMPDIR/zsh
@@ -606,28 +602,36 @@ EOF$$
     "
 }
 
-# ssh connect get nerdps1 from local copy using ssh config
-function pssh2 {
-    [ "$1" = "" -o "$1" = "-h" ] && ps1_phelp "pssh2 [-b] [-g] [-u] [<user>@]<host> [<ssh options>]" && return
-    typeset loginopts remote custom i conf=false ssh_config=$TMPDIR/.nerdps1.$USER.ssh
+# ssh connect get nerdps1 from local copy
+function pssh {
+    [ "$1" = "" -o "$1" = "-h" ] && ps1_phelp "pssh [-b] [-g] [-u] [<user>@]<host> [<ssh options>]" && return
+    typeset loginopts remote customenv i
     for i in "$@";do [[ $i = -* ]] || break;loginopts="$loginopts $i";shift;done
     remote=$1
     shift
-    [ -r $TMPDIR/.nerdps1.$USER.profile/.nerdrc ] && custom=$TMPDIR/.nerdps1.$USER.profile/.nerdrc
-    [ -r ~/.nerdrc ] && custom=~/.nerdrc
-    [ "$1" ] && [ -r "$1" ] && custom=$1 && shift
-    echo "RemoteCommand head -c 25000 /dev/zero >/tmp/.nerdps1.\$USER 2>/dev/null && export TMPDIR=/tmp || export TMPDIR=/var/tmp;TMPPREFIX=\$TMPDIR/zsh;. <(echo $(gzip -c <<EOF_$$ |base64 -w 0
-ps1_tmp=\$TMPDIR/.nerdps1.\$USER
-cat - <<'EOF__$$' >\$ps1_tmp
-$(< $ps1_tmp)
-EOF__$$
-mkdir -p \$ps1_tmp.profile
-cat - <<'EOF__$$' >\$ps1_tmp.profile/.nerdrc
-$([ "$custom" ] && cat "$custom")
-EOF__$$
-. \$ps1_tmp login $loginopts \$USER
-EOF_$$
-) |base64 -d |gzip -dc)" >$ssh_config
+    [ "$1" ] && [ -r "$1" ] && customenv=$1 && shift
+    ssh -t "$remote" "$@" "$(ps1_sshcmd "$loginops" "$customenv")"
+}
+
+function pssh2 {
+    [ "$1" = "" -o "$1" = "-h" ] && ps1_phelp "pssh2 [-b] [-g] [-u] [<user>@]<host> [<ssh options>]" && return
+    typeset loginopts remote customenv i conf=false ssh_config=$TMPDIR/.nerdps1.$USER.ssh
+    for i in "$@";do [[ $i = -* ]] || break;loginopts="$loginopts $i";shift;done
+    remote=$1
+    shift
+    [ "$1" ] && [ -r "$1" ] && customenv=$1 && shift
+    ssh -t "$remote" "$@"  ". <(echo $(ps1_sshcmd| gzip -c| base64 -w 0) |base64 -d|gzip -dc)"
+}
+
+# ssh connect get nerdps1 from local copy using ssh config
+function pssh3 {
+    [ "$1" = "" -o "$1" = "-h" ] && ps1_phelp "pssh2 [-b] [-g] [-u] [<user>@]<host> [<ssh options>]" && return
+    typeset loginopts remote customenv i conf=false ssh_config=$TMPDIR/.nerdps1.$USER.ssh
+    for i in "$@";do [[ $i = -* ]] || break;loginopts="$loginopts $i";shift;done
+    remote=$1
+    shift
+    [ "$1" ] && [ -r "$1" ] && customenv=$1 && shift
+    echo "RemoteCommand . <(echo $(ps1_sshcmd| gzip -c| base64 -w 0) |base64 -d|gzip -dc)" >$ssh_config
     # add ssh config if -F ssh option
     OIFS="$IFS"
     IFS=$'\n'
