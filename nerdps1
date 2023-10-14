@@ -640,8 +640,7 @@ function pssh3 {
     sshc=${opts##* -F};sshc=${sshc# };sshc=${sshc%% *}
     [ "$sshc" ] && { # not managing space in params
         [ -r "$sshc" ] && cat "$sshc" >>$ssh_config 2>/dev/null
-        opts=${opts/-F * /}
-        opts=${opts/-F* /}
+        opts=$(echo "${opts/ -F / -F}" |sed -e 's/ -F[^ ]*//')
         ssh -t "$remote" -F $ssh_config $opts
     } || { # add user ssh config if no -F option
         [ -r ~/.ssh/config ] && cat ~/.ssh/config >>$ssh_config
