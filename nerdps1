@@ -109,8 +109,8 @@ function ps1_login {
         [ "$i" = "-e" ] && shift && exec=""
     done
     [ "$3" ] && profdir="$3"
-    [ -e "$profdir" ] && ! chmod 0755 $profdir 2>/dev/null && echo "Warning! not owner of $profdir" >&2 && profdir=$profdir.$$
-    (umask 0022;mkdir -p $profdir)
+    [ -e "$profdir" ] && ! chmod 0711 $profdir 2>/dev/null && echo "Warning! not owner of $profdir" >&2 && profdir=$profdir.$$
+    (umask 0066;mkdir -p $profdir)
     [[ $ps1_tmp != *.$USER ]] && cp -p $ps1_tmp.profile/.nerdrc $profdir 2>/dev/null
     typeset nerdps1="ps1_tmp=$ps1_tmp;export TMPDIR=$TMPDIR;. $ps1_tmp reload"
     typeset load_custom="[ -r '$profdir/.nerdrc' ] && . '$profdir/.nerdrc'"
@@ -601,8 +601,8 @@ function ps1_sshcmd
 $(cat $ps1_tmp)
 EOF$$
         profdir=\$ps1_tmp.profile
-        [ -e \$profdir ] && ! chmod 0755 \$profdir 2>/dev/null && echo \"Warning! not owner of \$profdir\" >&2 && profdir=\$profdir.$$
-	    (umask 0022;mkdir -p \$profdir)
+        [ -e \$profdir ] && ! chmod 0711 \$profdir 2>/dev/null && echo \"Warning! not owner of \$profdir\" >&2 && profdir=\$profdir.$$
+	    (umask 0066;mkdir -p \$profdir)
         (umask 0022;cat - >\$profdir/.nerdrc) <<'EOF$$' 
 $([ "$custom" ] && cat "$custom")
 EOF$$
