@@ -88,7 +88,7 @@ function ps1_zshinit {
     echo 'cd /;cd
     ZDOTDIR=~/
     for i in zshenv zprofile zshrc;do
-        $_gprof && . /etc/zsh/$i
+        [ -r /etc/zsh/$i ] && $_gprof && . /etc/zsh/$i
         [ -r .$i ] && $_uprof && . ./.$i
     done
     typeset +r PS1
