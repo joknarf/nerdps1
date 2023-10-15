@@ -140,9 +140,9 @@ function ps1_login {
 
 function ps1_get_mseconds
 {
-    typeset s
+    typeset s __
     [ -r /proc/uptime ] && [ ! "$ps1_use_seconds" ] && {
-        read s _ </proc/uptime
+        read s __ </proc/uptime
         echo ${s/[.]/}
     } || echo "${SECONDS}00"
 }
