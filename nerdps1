@@ -11,8 +11,9 @@ head -c 25000 /dev/zero >/tmp/.nerdps1.$USER 2>/dev/null || {
     export TMPDIR=/var/tmp
 }
 ps1_tmp=$TMPDIR/.nerdps1.$USER
+[ -e "$ps1_tmp" ] && ! rm -rf $ps1_tmp 2>/dev/null && echo "Warning: Cannot remove $ps1_tmp. Using $ps1_tmp.$$" >&2 && ps1_tmp=$ps1_tmp.$$
 [ -r ~/.nerdrc ] && [ ! "$1" = login ] && . ~/.nerdrc
-cat - >$ps1_tmp <<'EOF'
+(umask 0022; cat - >$ps1_tmp) <<'EOF' || exit 1
 ######## powerline-awk ##########
 # Author: Franck Jouvanceau
 # Powerline prompt with AWK (bash/zsh/ksh)
@@ -98,7 +99,8 @@ function ps1_zshinit {
 # build profile according to user shell
 function ps1_login {
     typeset profdir="$TMPDIR/.nerdps1.$USER.profile" exec=exec
-    mkdir -p $profdir
+    (umask 0022;mkdir -p $profdir)
+    ! chmod 755 $profdir && return 1
     [[ $ps1_tmp != *.$USER ]] && cp $ps1_tmp.profile/.nerdrc $profdir 2>/dev/null
     typeset nerdps1="ps1_tmp=$ps1_tmp;export TMPDIR=$TMPDIR;. $ps1_tmp reload"
     typeset load_custom="[ -r '$profdir/.nerdrc' ] && . '$profdir/.nerdrc'"
@@ -119,7 +121,7 @@ function ps1_login {
         echo "ps1_powerline='$ps1_powerline'"
         echo "ps1_info='$ps1_info'"
         echo "ps1_loaded=1"
-    ) > "$profdir/.rc"
+    ) > "$profdir/.rc" || return 1
     ln -s .rc $profdir/.zshrc 2>/dev/null
     case "$ps1_shell" in
         */*ksh) ps1_kshinit >>"$profdir/.rc"
@@ -593,10 +595,11 @@ function ps1_sshcmd
         head -c 25000 /dev/zero >/tmp/.nerdps1.\$USER 2>/dev/null || export TMPDIR=/var/tmp
         export TMPPREFIX=\$TMPDIR/zsh
         ps1_tmp=\$TMPDIR/.nerdps1.\$USER
-        cat - <<'EOF$$' >\$ps1_tmp
+        [ -e \$ps1_tmp ] && ! rm -rf \$ps1_tmp 2>/dev/null && echo \"Warning: Cannot remove current \$ps1_tmp.\" >&2 && ps1_tmp=\$ps1_tmp.\$\$ 
+        (umask 0022;cat - >\$ps1_tmp) <<'EOF$$' || exit 1
 $(cat $ps1_tmp)
 EOF$$
-	    mkdir -p \$ps1_tmp.profile
+	    (umask 0022;mkdir -p \$ps1_tmp.profile)
         cat - <<'EOF$$' >\$ps1_tmp.profile/.nerdrc
 $([ "$custom" ] && cat "$custom")
 EOF$$
@@ -639,7 +642,7 @@ psshu() { pssh --url "$@"; }
 function ps1_pssh3 {
     typeset remote="$1" loginopts="$2" customenv="$3" ssh_config=$TMPDIR/.nerdps1.$USER.ssh argf=false
     shift 3
-    (umask 077;echo "RemoteCommand . <(echo $(ps1_sshcmd "$loginopts" "$customenv"| gzip -c| base64 $ps1_b64opt) |base64 -d|gzip -dc)" >$ssh_config)
+    (umask 077;echo "RemoteCommand . <(echo $(ps1_sshcmd "$loginopts" "$customenv"| gzip -c| base64 $ps1_b64opt) |base64 -d|gzip -dc)" >$ssh_config) || return 1
     # include ssh config if -F ssh option
     for arg in "$@";do
        shift
