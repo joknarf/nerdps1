@@ -40,8 +40,7 @@ ps1_pfstyle="/auto:exit_status /lblack:elapse /blue:userhost >/auto:git_branch >
 : ${ps1_url:=https://raw.githubusercontent.com/joknarf/nerdps1/main/nerdps1}
 : ${ps1_powerline:=$ps1_nfstyle}
 : ${ps1_display:=nerd} # nerdicons/powerline/nofont/ascii
-
-
+: ${ps1_sshmode:=raw} # pssh mode (1:raw 2:b64 3:cfg 4:url)
 
 #=========================
 type typeset >/dev/null 2>&1 || alias typeset=local # ash 
@@ -569,7 +568,8 @@ function ps1_phelp {
     echo "usage: $1
     -b : force bash shell
     -g : skip load global profile (/etc/profile[.d])
-    -u : skip load <user> profile (~/.profile...)"
+    -u : skip load <user> profile (~/.profile...)
+    $2"
 }
 
 # psudo [-g -u -p -b] user [envfile]
@@ -603,38 +603,43 @@ EOF$$
         . $nerdps1 login $loginopts \$USER
     "
 }
-
 # ssh connect get nerdps1 from local copy
-function pssh {
-    [ "$1" = "" -o "$1" = "-h" ] && ps1_phelp "pssh [-b] [-g] [-u] [<user>@]<host> [<ssh options>]" && return
-    typeset loginopts remote customenv i
-    for i in "$@";do [[ $i = -* ]] || break;loginopts="$loginopts $i";shift;done
+function pssh
+{
+    [ "$1" = "" -o "$1" = "-h" ] && ps1_phelp "pssh [--raw|--b64|--cfg|--url] [-b] [-g] [-u] [<user>@]<host> [<ssh options>]" \
+    "
+    --raw : remote command in clear text
+    --b64 : remote command with gzip + base64 (needs both binaries on local/remote)
+    --cfg : remote command using ssh config file (openssh 7.6+)
+    --url : remote command retrieves nerdps1 from url instead of local copy
+    " && return
+    typeset sshmode=${ps1_sshmode} loginopts remote customenv i
+    for i in "$@";do
+        [[ $i = -* ]] || break;
+        [[ $i = -[1-4] ]] && shift && sshmode=${i#-} && continue
+        case "$i" in --raw|--b64|--cfg|--url) sshmode=${i#--};shift;continue;;esac
+        loginopts="$loginopts $i"
+        shift
+    done
     remote=$1
     shift
     [ "$1" ] && [ -r "$1" ] && customenv=$1 && shift
-    ssh -t "$remote" "$@" "$(ps1_sshcmd "$loginops" "$customenv")"
+    case "$sshmode" in
+        1|raw) ssh -t "$remote" "$@" "$(ps1_sshcmd "$loginopts" "$customenv")";;
+        2|b64) ssh -t "$remote" "$@" ". <(echo $(ps1_sshcmd "$loginopts" "$customenv"| gzip -c| base64 $ps1_b64opt) |base64 -d|gzip -dc)";;
+        3|cfg) ps1_pssh3 "$remote" "$loginopts" "$customenv" "$@";;
+        4|url) ssh -t $remote "$@" "$(ps1_sshcmd "$loginopts" "$customenv" "<(curl -Ls -m 6 $ps1_url)")";;
+    esac
 }
 
-function pssh2 {
-    [ "$1" = "" -o "$1" = "-h" ] && ps1_phelp "pssh2 [-b] [-g] [-u] [<user>@]<host> [<ssh options>]" && return
-    typeset loginopts remote customenv i conf=false ssh_config=$TMPDIR/.nerdps1.$USER.ssh
-    for i in "$@";do [[ $i = -* ]] || break;loginopts="$loginopts $i";shift;done
-    remote=$1
-    shift
-    [ "$1" ] && [ -r "$1" ] && customenv=$1 && shift
-    ssh -t "$remote" "$@"  ". <(echo $(ps1_sshcmd| gzip -c| base64 $ps1_b64opt) |base64 -d|gzip -dc)"
-}
+psshu() { pssh --url "$@"; }
 
 # ssh connect get nerdps1 from local copy using ssh config
 # Needs OpenSSH 7.6
-function pssh3 {
-    [ "$1" = "" -o "$1" = "-h" ] && ps1_phelp "pssh2 [-b] [-g] [-u] [<user>@]<host> [<ssh options>]" && return
-    typeset loginopts remote customenv opts ssh_config=$TMPDIR/.nerdps1.$USER.ssh argf=false
-    for i in "$@";do [[ $i = -* ]] || break;loginopts="$loginopts $i";shift;done
-    remote=$1
-    shift
-    [ "$1" ] && [ -r "$1" ] && customenv=$1 && shift
-    (umask 077;echo "RemoteCommand . <(echo $(ps1_sshcmd| gzip -c| base64 $ps1_b64opt) |base64 -d|gzip -dc)" >$ssh_config)
+function ps1_pssh3 {
+    typeset remote="$1" loginopts="$2" customenv="$3" ssh_config=$TMPDIR/.nerdps1.$USER.ssh argf=false
+    shift 3
+    (umask 077;echo "RemoteCommand . <(echo $(ps1_sshcmd "$loginopts" "$customenv"| gzip -c| base64 $ps1_b64opt) |base64 -d|gzip -dc)" >$ssh_config)
     # include ssh config if -F ssh option
     for arg in "$@";do
        shift
@@ -649,19 +654,8 @@ function pssh3 {
         [ -r ~/.ssh/config ] && cat ~/.ssh/config >>$ssh_config
     }
     ssh -t "$remote" -F $ssh_config "$@"
-
 }
 
-# ssh connect get nerdps1 from $ps1_url
-function psshu {
-    [ "$1" = "" -o "$1" = "-h" ] && ps1_phelp "psshu [-b] [-g] [-u] [<user>@]<host> [<ssh options>]" && return
-    typeset loginopts remote customenv
-    for i in "$@";do [[ $i = -* ]] || break;loginopts="$loginopts $i";shift;done
-    remote=$1
-    shift
-    [ "$1" ] && [ -r "$1" ] && customenv=$1 && shift
-    ssh -t $remote "$@" "$(ps1_sshcmd "$loginopts" "$customenv" "<(curl -Ls -m 6 $ps1_url)")"
-}
 
 ps1_display "$ps1_display"
 [ "$ps1_style" ] && ps1_style "$ps1_style" || ps1_set
