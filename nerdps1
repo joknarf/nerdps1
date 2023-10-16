@@ -2,6 +2,7 @@
 [ "$1" = activate ] && unset ps1_loaded && awk 'NR>2' $0 && exit 0
 [ "$1" ] && unset ps1_loaded
 [ "$ps1_loaded" ] && return 0
+ps1_loaded=1
 : ${USER:=$USERNAME}
 : ${USER:=$LOGNAME}
 export TMPDIR=/tmp
@@ -12,6 +13,7 @@ head -c 25000 /dev/zero >/tmp/.nerdps1.$USER 2>/dev/null || {
 }
 ps1_tmp=$TMPDIR/.nerdps1.$USER
 [ -e "$ps1_tmp" ] && ! chmod 0644 $ps1_tmp 2>/dev/null && echo "Warning! not owner of $ps1_tmp." >&2 && ps1_tmp=$ps1_tmp.$$
+rm $ps1_tmp.profile/.nerdrc 2>/dev/null
 [ -r ~/.nerdrc ] && [ ! "$1" = login ] && . ~/.nerdrc
 (umask 0022; cat - >$ps1_tmp) <<'EOF' || exit 1
 ######## powerline-awk ##########
@@ -682,5 +684,6 @@ return 0
 ####### end powerline-awk ########
 EOF
 
+unset ps1_loaded
 . $ps1_tmp "$@"
 :
