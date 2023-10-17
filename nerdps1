@@ -442,7 +442,7 @@ function ps1_loadavg {
 function ps1_os {
     [ "$BB_ASH_VERSION" ] && echo "$ps1_osicon:$ps1_osver" && return
     typeset mininums="① ② ③ ④ ⑤ ⑥ ⑦ ⑧ ⑨ ⑩ ⑪ ⑫ ⑬ ⑭ ⑮ ⑯ ⑰ ⑱ ⑲ ⑳"
-    typeset mininums=(0 ⑴ ⑵ ⑶ ⑷ ⑸ ⑹ ⑺ ⑻ ⑼ ⑽ ⑾ ⑿ ⒀ ⒁ ⒂ ⒃ ⒄ ⒅ ⒆ ⒇ ㉑ ㉒ ㉓ ㉔ ㉕ ㉖ ㉗ ㉘ ㉙ ㉚ ㉛ ㉜ ㉝ ㉞ ㉟)
+    eval 'typeset mininums=(0 ⑴ ⑵ ⑶ ⑷ ⑸ ⑹ ⑺ ⑻ ⑼ ⑽ ⑾ ⑿ ⒀ ⒁ ⒂ ⒃ ⒄ ⒅ ⒆ ⒇ ㉑ ㉒ ㉓ ㉔ ㉕ ㉖ ㉗ ㉘ ㉙ ㉚ ㉛ ㉜ ㉝ ㉞ ㉟)'
     echo "$ps1_osicon:${mininums[$ps1_osver]}"
 }
 
@@ -454,12 +454,18 @@ function ps1_osinfo {
     [ "$VERSION_ID" ] || {
         [ -f /etc/redhat-release ] && relfile=/etc/redhat-release
         [ -f /etc/release ] && relfile=/etc/release
-        ID=$($ps1_awk '{sub("Red","rhel", $1);print tolower($1)"."$(NF-1);exit(0);}' $relfile)
+        [ "$relfile" ] && ID=$($ps1_awk '{sub("Red","rhel", $1);print tolower($1)"."$(NF-1);exit(0);}' $relfile)
         VERSION_ID=${ID#*.}
         ID=${ID%%.*};
     }   
     VERSION_ID=${VERSION_ID#v}
     : ${ID:=$(uname -s)}
+    [ "$ID" = "SunOS" ] && ID=$(uname -r) && ID="solaris${ID#*.}"
+    [ "$ID" = "Darwin" ] && {
+        ID=$(sw_vers |awk -F':\t*' '$1=="ProductName"{s=$2}$1=="ProductVersion"{v=$2}END{print tolower(s"."v)}')
+        VERSION_ID=${ID#*.}
+        ID=${ID%%.*}
+    }
     case "${ID}" in
         ubuntu) ps1_osicon='black/white///red';;
         centos*|CentOS*) ps1_osicon='black/white///magenta';;
@@ -475,8 +481,6 @@ function ps1_osinfo {
         omnios|sunos) ps1_osicon='black///🌞';;
         linux)  ps1_osicon='';;
     esac
-    [ "$ID" = "Darwin" ] && ID=$(sw_vers |awk -F':\t*' '$1=="ProductName"{s=$2}$1=="ProductVersion"{v=$2}END{print s v}')
-    [ "$ID" = "SunOS" ] && ID=$(uname -r) && ID="solaris${ID#*.}"
     ps1_osinfo="${ID%%.*}"
     MAIN_VERSION_ID=${VERSION_ID%%.*}
     [ ${#MAIN_VERSION_ID} -le 3 ] && ps1_osinfo="$ps1_osinfo${VERSION_ID%%.*}"
