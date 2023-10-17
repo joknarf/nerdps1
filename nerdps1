@@ -1,5 +1,5 @@
 #!/bin/bash
-[ "$1" = activate ] && unset ps1_loaded && awk 'NR>2' $0 && exit 0
+[ "$1" = activate ] && awk 'NR>2' $0 && exit 0
 [ "$1" ] && unset ps1_loaded
 [ "$ps1_loaded" ] && return 0
 ps1_loaded=1
@@ -24,7 +24,7 @@ rm $ps1_tmp.profile/.nerdrc 2>/dev/null
 [ "$ps1_loaded" ] && return 0
 ps1_loaded=1
 
-ps1_nfstyle="(/auto:exit_status (/lblack:elapse (/blue:userhost )/auto:git_branch )/lblack:cwd > | (/lblue/black/blue:info (/auto:addon (/auto:dfcheck (/auto:loadavg (/auto:freemem (/blue:time ) (/auto:os"
+ps1_nfstyle="(/auto:exit_status (/lblack:elapse (/blue:userhost )/auto:git_branch )/lblack:cwd > | (/lblue/black/blue:info (/auto:addon (/auto:dfcheck (/auto:loadavg (/auto:freemem (/auto:os (/blue:time )"
 ps1_nfstyle2="(/auto:exit_status (/lblack:elapse (/blue:userhost )/lblack:cwd >/auto:git_branch > | (/lblue/black/blue:info (/auto:addon (/auto:dfcheck (/auto:loadavg (/auto:freemem (/blue:time )"
 ps1_pfstyle="/auto:exit_status /lblack:elapse /blue:userhost >/auto:git_branch >/lblack:cwd > | </lblue/black/blue:info </auto:addon </auto:dfcheck </auto:loadavg </auto:freemem </blue:time >" 
 
@@ -461,9 +461,9 @@ function ps1_osinfo {
     VERSION_ID=${VERSION_ID#v}
     : ${ID:=$(uname -s)}
     case "${ID}" in
-        ubuntu) ps1_osicon='black////red';;
-        centos*|CentOS*) ps1_osicon='black////magenta';;
-        redhat) ps1_osicon='black////red';;
+        ubuntu) ps1_osicon='black/white///red';;
+        centos*|CentOS*) ps1_osicon='black/white///magenta';;
+        rhel|redhat) ps1_osicon='black/white///red';;
         Darwin) ps1_osicon='';;
         alpine) ps1_osicon='';;
         arch)   ps1_osicon='';;
@@ -471,7 +471,7 @@ function ps1_osinfo {
         fedora) ps1_osicon='';;
         freebsd) ps1_osicon='';;
         suse)   ps1_osicon='';;
-        windows|MINGW64|msys2) ps1_osicon='';;
+        windows|MINGW64|msys2) ps1_osicon='black/white///blue';;
         omnios|sunos) ps1_osicon='black///🌞';;
         linux)  ps1_osicon='';;
     esac
@@ -628,6 +628,7 @@ function ps1_sshcmd
     [ -r ~/.nerdrc ] && custom=~/.nerdrc
     [ "$customenv" ] && custom=$customenv
     printf "%s" "
+        #ps1_loaded=0
         export TMPDIR=/tmp
         head -c 25000 /dev/zero >/tmp/.nerdps1.\$USER 2>/dev/null || export TMPDIR=/var/tmp
         export TMPPREFIX=\$TMPDIR/zsh
