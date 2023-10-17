@@ -470,7 +470,7 @@ function ps1_osinfo {
         ubuntu) ps1_osicon='black/white///red';;
         centos*|CentOS*) ps1_osicon='black/white///magenta';;
         rhel|redhat) ps1_osicon='black/white///red';;
-        Darwin) ps1_osicon='';;
+        macos) ps1_osicon='';;
         alpine) ps1_osicon='';;
         arch)   ps1_osicon='';;
         debian) ps1_osicon='';;
@@ -478,7 +478,7 @@ function ps1_osinfo {
         freebsd) ps1_osicon='';;
         suse)   ps1_osicon='';;
         windows|MINGW64|msys2) ps1_osicon='black/white///blue';;
-        omnios|sunos) ps1_osicon='black///🌞';;
+        omnios|solaris) ps1_osicon='black///🌞';;
         linux)  ps1_osicon='';;
     esac
     ps1_osinfo="${ID%%.*}"
