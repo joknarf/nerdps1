@@ -470,8 +470,8 @@ function ps1_osinfo {
         ubuntu) ps1_osicon='black/white///red';;
         centos*|CentOS*) ps1_osicon='black/white///magenta';;
         rhel|redhat) ps1_osicon='black/white///red';;
-        macos) ps1_osicon='black/white//white';;
-        alpine) ps1_osicon='black/white//blue';;
+        macos) ps1_osicon='black/white///white';;
+        alpine) ps1_osicon='black/white///blue';;
         arch)   ps1_osicon='';;
         debian) ps1_osicon='';;
         fedora) ps1_osicon='';;
