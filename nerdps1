@@ -116,7 +116,8 @@ function ps1_login {
     [[ $ps1_tmp != *.$USER ]] && cp -p $ps1_tmp.profile/.nerdrc $profdir 2>/dev/null
     typeset nerdps1="ps1_tmp=$ps1_tmp;export TMPDIR=$TMPDIR;. $ps1_tmp reload"
     typeset load_custom="[ -r '$profdir/.nerdrc' ] && . '$profdir/.nerdrc'"
-    [ "${1-$USER}" = "$USER" ] || cp -p ~/.nerdrc $profdir 2>/dev/null
+    #[ "${1-$USER}" = "$USER" ] || cp -p ~/.nerdrc $profdir 2>/dev/null
+    [ "$ps1_user" ]  && [ "$ps1_user" != "$USER" ] && cp -p ~/.nerdrc $profdir 2>/dev/null
     [ "$ps1_shell" ] || ps1_shell=$(ps1_usershell $1)
     [ "$2" ] && [ -r "$2" ] && cp -p $2 $profdir/.nerdrc
     (umask 0022;(
