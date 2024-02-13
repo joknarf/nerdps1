@@ -460,6 +460,7 @@ function ps1_osinfo {
     }   
     VERSION_ID=${VERSION_ID#v}
     : ${ID:=$(uname -s)}
+    [[ $ID = CYGWIN* ]] && VERSION_ID=${ID#*-} && VERSON_ID=${VERSION_ID%-*} && ID=${ID%%-*}
     [ "$ID" = "SunOS" ] && ID=$(uname -r) && ID="solaris${ID#*.}"
     [ "$ID" = "Darwin" ] && {
         ID=$(sw_vers |awk -F':\t*' '$1=="ProductName"{s=$2}$1=="ProductVersion"{v=$2}END{print tolower(s"."v)}')
@@ -477,7 +478,7 @@ function ps1_osinfo {
         fedora) ps1_osicon='';;
         freebsd) ps1_osicon='';;
         suse)   ps1_osicon='';;
-        windows|MINGW64|msys2) ps1_osicon='black/white///blue';;
+        windows|MINGW64|CYGWIN*|msys2) ps1_osicon='black/white///blue';;
         omnios|solaris) ps1_osicon='black///🌞';;
         linux)  ps1_osicon='';;
     esac
