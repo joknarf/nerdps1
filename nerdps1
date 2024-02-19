@@ -379,7 +379,8 @@ function ps1_precmd {
 function ps1_info {
     typeset infos i
     infos=$(eval echo \""$ps1_info_eval"\")
-    for i in $ps1_info_vars $ps1_info;do
+    [ "$ZSH_VERSION" ] && set -- ${=ps1_info_vars} || set -- $ps1_info_vars
+    for i in "$@" $ps1_info;do
         infos=$infos$(eval echo \"'|$'"$i"\")
     done
     echo "$infos"
@@ -397,7 +398,7 @@ function ps1_freemem {
     [ -r /proc/meminfo ] && cmd='cat /proc/meminfo'
     [ ! "$cmd" ] && [ -r /var/run/dmesg.boot ] && cmd='grep avail.memory /var/run/dmesg.boot'
     [ ! "$cmd" ] && return
-    $cmd |$ps1_awk -v limits="$ps1_memlimits" '
+    eval $cmd |$ps1_awk -v limits="$ps1_memlimits" '
         /MemAvailable:/ { avail = $2 }
         /Buffer:|Cached:|MemFree:/ { free += $2 }
         /page size of/ { ps=$(NF-1) }
@@ -587,7 +588,6 @@ function ps1_set {
         : ${PROMPT_DIRTRIM:=5}
     elif [ "$ZSH_VERSION" ];then
         setopt PROMPT_SUBST
-        setopt sh_word_split # for i in $var
     else
         ps1_hostname=$(uname -n)
         ps1_hostname=${ps1_hostname%%.*}
