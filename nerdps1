@@ -378,7 +378,8 @@ function ps1_precmd {
 function ps1_info {
     typeset infos i
     infos=$(eval echo \""$ps1_info_eval"\")
-    [ "$ZSH_VERSION" ] && set -- ${=ps1_info_vars} || set -- $ps1_info_vars
+    # cannot use zsh ${=ps1_info_vars} as ksh error
+    [ "$ZSH_VERSION" ] && set -- $(echo $ps1_info_vars) || set -- $ps1_info_vars
     for i in "$@" $ps1_info;do
         infos=$infos$(eval echo \"'|$'"$i"\")
     done
