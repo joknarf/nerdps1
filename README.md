@@ -146,7 +146,7 @@ used terminal colors in example:
             "blue": "#2760AA",
             "cyan": "#06989A",
             "green": "#088A5B",
-            "purple": "#75507B",
+            "purple": "#66458d",
             "red": "#BA1611",
             "white": "#D3D7CF",
             "yellow": "#CF8700",
