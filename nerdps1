@@ -1,5 +1,5 @@
 #!/bin/bash
-[ "$1" = activate ] && unset ps1_loaded && awk 'NR>2' $0 && exit 0
+[ "$1" = activate ] && awk 'NR>2' $0 && exit 0
 [ "$1" ] && unset ps1_loaded
 [ "$ps1_loaded" ] && return 0
 ps1_loaded=1
@@ -24,9 +24,9 @@ rm $ps1_tmp.profile/.nerdrc 2>/dev/null
 [ "$ps1_loaded" ] && return 0
 ps1_loaded=1
 
-ps1_nfstyle="(/auto:exit_status (/lblack:elapse (/blue:userhost )/auto:git_branch )/lblack:cwd > | (/lblue/black/blue:info (/auto:addon (/magenta/white:venv (/auto:dfcheck (/auto:loadavg (/auto:freemem (/blue:time )"
+ps1_nfstyle="(/auto:exit_status (/lblack:elapse (/blue:userhost )/auto:git_branch )/lblack:cwd > | (/lblue/black/blue:info (/auto:addon (/magenta/white:venv (/auto:dfcheck (/auto:loadavg (/auto:freemem (/auto:os (/blue:time )"
 ps1_nfstyle2="(/auto:exit_status (/lblack:elapse (/blue:userhost )/lblack:cwd >/auto:git_branch > | (/lblue/black/blue:info (/auto:addon (/magenta/white:venv (/auto:dfcheck (/auto:loadavg (/auto:freemem (/blue:time )"
-ps1_pfstyle="/auto:exit_status /lblack:elapse /blue:userhost >/auto:git_branch >/lblack:cwd > | </lblue/black/blue:info </auto:addon </magenta/white:venv </auto:dfcheck </auto:loadavg </auto:freemem </blue:time >" 
+ps1_pfstyle="/auto:exit_status /lblack:elapse /blue:userhost >/auto:git_branch >/lblack:cwd > | </lblue/black/blue:info </auto:addon </magenta/white:venv </auto:dfcheck </auto:loadavg </auto:freemem </blue:time >"
 
 # overiddable vars in your env or .nerdrc
 #: ${ps1_info_eval:='$(echo uid:$(id -u))'}
@@ -239,7 +239,8 @@ function ps1_pwline {
         bgs[j] = colinfo[i]
         fgs[j] = colinfo[i+1] == "" ? "lwhite" : colinfo[i+1]
         sepc[j] = colinfo[i+2]
-        icos[j] = icons[colinfo[i+3]]
+        if (nopw==0 && (i+3) in colinfo)
+            icos[j] = (colinfo[i+3] in icons) ? colors[colinfo[i+4]]icons[colinfo[i+3]]colors[fgs[j]] : colors[colinfo[i+4]]colinfo[i+3]colors[fgs[j]]
     }
     function gettext(info) {
         sub("[^:]*:", "", info)
@@ -378,10 +379,9 @@ function ps1_precmd {
 function ps1_info {
     typeset infos i
     infos=$(eval echo \""$ps1_info_eval"\")
-    # cannot use zsh ${=ps1_info_vars} as ksh error
     [ "$ZSH_VERSION" ] && set -- $(echo $ps1_info_vars) || set -- $ps1_info_vars
     for i in "$@" $ps1_info;do
-        infos=$infos$(eval echo \"'|$'"$i"\")
+        infos="$infos$(eval echo \"'|$'"$i"\")"
     done
     echo "$infos"
 }
@@ -440,16 +440,53 @@ function ps1_loadavg {
     echo "green:$load"
 }
 
+function ps1_os {
+    [ "$BB_ASH_VERSION" ] && echo "$ps1_osicon:$ps1_osver" && return
+    typeset mininums="① ② ③ ④ ⑤ ⑥ ⑦ ⑧ ⑨ ⑩ ⑪ ⑫ ⑬ ⑭ ⑮ ⑯ ⑰ ⑱ ⑲ ⑳"
+    eval 'typeset mininums=(0 ⑴ ⑵ ⑶ ⑷ ⑸ ⑹ ⑺ ⑻ ⑼ ⑽ ⑾ ⑿ ⒀ ⒁ ⒂ ⒃ ⒄ ⒅ ⒆ ⒇ ㉑ ㉒ ㉓ ㉔ ㉕ ㉖ ㉗ ㉘ ㉙ ㉚ ㉛ ㉜ ㉝ ㉞ ㉟)'
+    echo "$ps1_osicon:${mininums[$ps1_osver]}"
+}
+
 function ps1_osinfo {
-    [ -f /etc/os-release ] && . /etc/os-release || {
-        [ -f /etc/redhat-release ] && ID=$($ps1_awk '{sub("Red","rh", $1);print $1$(NF-1);exit(0);}' /etc/redhat-release)
-    }
+    typeset relfile
+    [ -f /etc/os-release ] && . /etc/os-release
+    MAIN_VERSION_ID=${VERSION_ID%%.*}
+    [ ${#MAIN_VERSION_ID} -gt 2 ] && VERSION_ID=""
+    [ "$VERSION_ID" ] || {
+        [ -f /etc/redhat-release ] && relfile=/etc/redhat-release
+        [ -f /etc/release ] && relfile=/etc/release
+        [ "$relfile" ] && ID=$($ps1_awk '{sub("Red","rhel", $1);print tolower($1)"."$(NF-1);exit(0);}' $relfile)
+        VERSION_ID=${ID#*.}
+        ID=${ID%%.*};
+    }   
+    VERSION_ID=${VERSION_ID#v}
     : ${ID:=$(uname -s)}
-    [ "$ID" = "Darwin" ] && ID=$(sw_vers |awk -F':\t*' '$1=="ProductName"{s=$2}$1=="ProductVersion"{v=$2}END{print s v}')
+    [[ $ID = CYGWIN* ]] && VERSION_ID=${ID#*-} && VERSON_ID=${VERSION_ID%-*} && ID=${ID%%-*}
     [ "$ID" = "SunOS" ] && ID=$(uname -r) && ID="solaris${ID#*.}"
+    [ "$ID" = "Darwin" ] && {
+        ID=$(sw_vers |awk -F':\t*' '$1=="ProductName"{s=$2}$1=="ProductVersion"{v=$2}END{print tolower(s"."v)}')
+        VERSION_ID=${ID#*.}
+        ID=${ID%%.*}
+    }
+    case "${ID}" in
+        ubuntu) ps1_osicon='black/white///red';;
+        centos*|CentOS*) ps1_osicon='black/white///magenta';;
+        rhel|redhat) ps1_osicon='black/white///red';;
+        macos) ps1_osicon='black/white///white';;
+        alpine) ps1_osicon='black/white///blue';;
+        arch)   ps1_osicon='';;
+        debian) ps1_osicon='';;
+        fedora) ps1_osicon='';;
+        freebsd) ps1_osicon='';;
+        suse)   ps1_osicon='';;
+        windows|MINGW64|CYGWIN*|msys2) ps1_osicon='black/white///blue';;
+        omnios|solaris) ps1_osicon='black///🌞';;
+        linux)  ps1_osicon='';;
+    esac
     ps1_osinfo="${ID%%.*}"
     MAIN_VERSION_ID=${VERSION_ID%%.*}
     [ ${#MAIN_VERSION_ID} -le 3 ] && ps1_osinfo="$ps1_osinfo${VERSION_ID%%.*}"
+    ps1_osver=$MAIN_VERSION_ID
 }
 
 function ps1_venv {
@@ -602,6 +639,7 @@ function ps1_sshcmd
     [ -r ~/.nerdrc ] && custom=~/.nerdrc
     [ "$customenv" ] && custom=$customenv
     printf "%s" "
+        #ps1_loaded=0
         export TMPDIR=/tmp
         head -c 25000 /dev/zero >/tmp/.nerdps1.\$USER 2>/dev/null || export TMPDIR=/var/tmp
         export TMPPREFIX=\$TMPDIR/zsh
