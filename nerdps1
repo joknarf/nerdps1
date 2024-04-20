@@ -24,13 +24,13 @@ rm $ps1_tmp.profile/.nerdrc 2>/dev/null
 [ "$ps1_loaded" ] && return 0
 ps1_loaded=1
 
-ps1_nfstyle="(/auto:exit_status (/lblack:elapse (/blue:userhost )/auto:git_branch )/lblack:cwd > | (/lblue/black/blue:info (/auto:addon (/auto:dfcheck (/auto:loadavg (/auto:freemem (/blue:time )"
-ps1_nfstyle2="(/auto:exit_status (/lblack:elapse (/blue:userhost )/lblack:cwd >/auto:git_branch > | (/lblue/black/blue:info (/auto:addon (/auto:dfcheck (/auto:loadavg (/auto:freemem (/blue:time )"
-ps1_pfstyle="/auto:exit_status /lblack:elapse /blue:userhost >/auto:git_branch >/lblack:cwd > | </lblue/black/blue:info </auto:addon </auto:dfcheck </auto:loadavg </auto:freemem </blue:time >" 
+ps1_nfstyle="(/auto:exit_status (/lblack:elapse (/blue:userhost )/auto:git_branch )/lblack:cwd > | (/lblue/black/blue:info (/auto:addon (/magenta/white:venv (/auto:dfcheck (/auto:loadavg (/auto:freemem (/blue:time )"
+ps1_nfstyle2="(/auto:exit_status (/lblack:elapse (/blue:userhost )/lblack:cwd >/auto:git_branch > | (/lblue/black/blue:info (/auto:addon (/magenta/white:venv (/auto:dfcheck (/auto:loadavg (/auto:freemem (/blue:time )"
+ps1_pfstyle="/auto:exit_status /lblack:elapse /blue:userhost >/auto:git_branch >/lblack:cwd > | </lblue/black/blue:info </auto:addon </magenta/white:venv </auto:dfcheck </auto:loadavg </auto:freemem </blue:time >" 
 
 # overiddable vars in your env or .nerdrc
 #: ${ps1_info_eval:='$(echo uid:$(id -u))'}
-: ${ps1_info_vars:='client_id ORACLE_SID {VIRTUAL_ENV##*[/\\\\]}'}
+: ${ps1_info_vars:='client_id ORACLE_SID'}
 : ${ps1_info:=''}       # var to add variables to info zone  
 : ${ps1_git_status:=1}  # 0 to disable git status
 : ${ps1_exit_colors:="green red"}
@@ -449,6 +449,12 @@ function ps1_osinfo {
     ps1_osinfo="${ID%%.*}"
     MAIN_VERSION_ID=${VERSION_ID%%.*}
     [ ${#MAIN_VERSION_ID} -le 3 ] && ps1_osinfo="$ps1_osinfo${VERSION_ID%%.*}"
+}
+
+function ps1_venv {
+    [ "$VIRTUAL_ENV" ] || return
+    typeset venv=${VIRTUAL_ENV/\/?(.)venv}
+    printf "%s" "${venv##*[/\\\\]}"
 }
 
 function ps1_prompt {
