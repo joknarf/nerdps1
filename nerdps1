@@ -3,8 +3,8 @@
 [ "$1" ] && unset ps1_loaded
 [ "$ps1_loaded" ] && return 0
 ps1_loaded=1
-: ${USER:=$USERNAME}
-: ${USER:=$LOGNAME}
+: "${USER:=$USERNAME}"
+: "${USER:=$LOGNAME}"
 export TMPDIR=/tmp
 # check /tmp full
 head -c 25000 /dev/zero >"/tmp/.nerdps1.$USER" 2>/dev/null || {
@@ -29,21 +29,21 @@ ps1_nfstyle2="(/auto:exit_status (/lblack:elapse (/blue:userhost )/lblack:cwd >/
 ps1_pfstyle="/auto:exit_status /lblack:elapse /blue:userhost >/auto:git_branch >/lblack:cwd > | </lblue/black/blue:info </auto:addon </magenta/white:venv </auto:dfcheck </auto:loadavg </auto:freemem </blue:time >"
 
 # overiddable vars in your env or .nerdrc
-#: ${ps1_info_eval:='$(echo uid:$(id -u))'}
-: ${ps1_info_vars:='client_id ORACLE_SID'}
-: ${ps1_info:=''}       # var to add variables to info zone
-: ${ps1_git_status:=1}  # 0 to disable git status
-: ${ps1_exit_colors:="green red"}
-: ${ps1_git_colors:="green yellow/black"}
-: ${ps1_blank_line:=1}
-: ${ps1_fslist:="/ /tmp"} # put "-l" to have all local FS check
-: ${ps1_fslimits:="95 100"}
-: ${ps1_loadlimits:="10 20"}
-: ${ps1_memlimits:="300 100"}
-: ${ps1_url:=https://raw.githubusercontent.com/joknarf/nerdps1/main/nerdps1}
-: ${ps1_powerline:=$ps1_nfstyle}
-: ${ps1_display:=nerd} # nerdicons/powerline/nofont/ascii
-: ${ps1_sshmode:=raw} # pssh mode (1:raw 2:b64 3:cfg 4:url)
+#: "${ps1_info_eval:="$(echo uid:$(id -u))"}"
+: "${ps1_info_vars:="client_id ORACLE_SID"}"
+: "${ps1_info:=""}"       # var to add variables to info zone
+: "${ps1_git_status:=1}"  # 0 to disable git status
+: "${ps1_exit_colors:="green red"}"
+: "${ps1_git_colors:="green yellow/black"}"
+: "${ps1_blank_line:=1}"
+: "${ps1_fslist:="/ /tmp"}" # put "-l" to have all local FS check
+: "${ps1_fslimits:="95 100"}"
+: "${ps1_loadlimits:="10 20"}"
+: "${ps1_memlimits:="300 100"}"
+: "${ps1_url:=https://raw.githubusercontent.com/joknarf/nerdps1/main/nerdps1}"
+: "${ps1_powerline:=$ps1_nfstyle}"
+: "${ps1_display:=nerd}" # nerdicons/powerline/nofont/ascii
+: "${ps1_sshmode:=raw}" # pssh mode (1:raw 2:b64 3:cfg 4:url)
 
 #=========================
 type typeset >/dev/null 2>&1 || alias typeset=local # ash
@@ -161,7 +161,7 @@ function ps1_time_cmd
 function ps1_elapse
 {
     typeset seconds h m s end ms=0
-    : ${__ps1_sec:=-1}
+    : "${__ps1_sec:=-1}"
     [ "$__ps1_sec" = -1 ] && return
     [ "$__ps1_noexec" ] && return
     end=$(ps1_get_mseconds)
@@ -184,7 +184,7 @@ function ps1_elapse
 function ps1_pwline {
     : ${COLUMNS:=$(stty size 2>/dev/null)} # ash no $COLUMNS
     COLUMNS=${COLUMNS#* }
-    : ${ps1_colors:="blue lblack green yellow/black lblue/black"} # just some defaults
+    : "${ps1_colors:="blue lblack green yellow/black lblue/black"}" # just some defaults
     $ps1_awk -v pcol="$ps1_colors" -v columns="$COLUMNS" -v nopw="$ps1_nopw" -v kshbug="$ps1_kshbug" '
     function init_symbols(  symbols,ts) {
         if (nopw==0) {
@@ -444,7 +444,7 @@ function ps1_osinfo {
     [ -f /etc/os-release ] && . /etc/os-release || {
         [ -f /etc/redhat-release ] && ID=$($ps1_awk '{sub("Red","rh", $1);print $1$(NF-1);exit(0);}' /etc/redhat-release)
     }
-    : ${ID:=$(uname -s)}
+    : "${ID:=$(uname -s)}"
     [ "$ID" = "Darwin" ] && ID=$(sw_vers |awk -F':\t*' '$1=="ProductName"{s=$2}$1=="ProductVersion"{v=$2}END{print s v}')
     [ "$ID" = "SunOS" ] && ID=$(uname -r) && ID="solaris${ID#*.}"
     ps1_osinfo="${ID%%.*}"
@@ -554,17 +554,17 @@ function ps1_set {
     ps1_osinfo
     if [ "$BASH" ];then
         shopt -s checkwinsize 2>/dev/null
-        : ${PROMPT_DIRTRIM:=5}
+        : "${PROMPT_DIRTRIM:=5}"
     elif [ "$ZSH_VERSION" ];then
         setopt PROMPT_SUBST
     else
         ps1_hostname=$(uname -n)
         ps1_hostname=${ps1_hostname%%.*}
-        [ "$BB_ASH_VERSION$KSH_VERSION" ] || : ${ps1_kshbug:=1}
-        [[ "$KSH_VERSION" = *2012* ]] && : ${ps1_kshbug:=1}
-        : ${ps1_kshbug:=0}
+        [ "$BB_ASH_VERSION$KSH_VERSION" ] || : "${ps1_kshbug:=1}"
+        [[ "$KSH_VERSION" = *2012* ]] && : "${ps1_kshbug:=1}"
+        : "${ps1_kshbug:=0}"
     fi
-    [[ $(uname -r ) = *-ish ]] && : ${ps1_use_seconds:=1}
+    [[ $(uname -r ) = *-ish ]] && : "${ps1_use_seconds:=1}"
     PS1_OLD="$PS1"
     PS1=$(ps1_prompt "$ps1_powerline")
     [ "$ps1_blank_line" = 1 ] && PS1="
@@ -590,7 +590,7 @@ function ps1_phelp {
 function psudo {
     [ "$1" = "-h" ] && ps1_phelp "psudo [-b] [-g] [-u] [<user>]" && return
     ps1_user="$*";ps1_user=${ps1_user##*-[a-z] };ps1_user=${ps1_user% *}
-    : ${ps1_user:=root}
+    : "${ps1_user:=root}"
     sudo -u "$ps1_user" -H $(ps1_login -e "$@")
 }
 
