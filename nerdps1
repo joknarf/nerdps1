@@ -1,5 +1,5 @@
 #!/bin/bash
-[ "$1" = activate ] && unset ps1_loaded && awk 'NR>2' $0 && exit 0
+[ "$1" = activate ] && unset ps1_loaded && awk 'NR>2' "$0" && exit 0
 [ "$1" ] && unset ps1_loaded
 [ "$ps1_loaded" ] && return 0
 ps1_loaded=1
@@ -7,15 +7,15 @@ ps1_loaded=1
 : ${USER:=$LOGNAME}
 export TMPDIR=/tmp
 # check /tmp full
-head -c 25000 /dev/zero >/tmp/.nerdps1.$USER 2>/dev/null || {
+head -c 25000 /dev/zero >"/tmp/.nerdps1.$USER" 2>/dev/null || {
     export TMPPREFIX=/var/tmp/zsh
     export TMPDIR=/var/tmp
 }
 ps1_tmp=$TMPDIR/.nerdps1.$USER
-[ -e "$ps1_tmp" ] && ! chmod 0644 $ps1_tmp 2>/dev/null && echo "Warning! not owner of $ps1_tmp." >&2 && ps1_tmp=$ps1_tmp.$$
-rm $ps1_tmp.profile/.nerdrc 2>/dev/null
+[ -e "$ps1_tmp" ] && ! chmod 0644 "$ps1_tmp" 2>/dev/null && echo "Warning! not owner of $ps1_tmp." >&2 && ps1_tmp=$ps1_tmp.$$
+rm "$ps1_tmp.profile/.nerdrc" 2>/dev/null
 [ -r ~/.nerdrc ] && [ ! "$1" = login ] && . ~/.nerdrc
-(umask 0022; cat - >$ps1_tmp) <<'EOF' || exit 1
+(umask 0022; cat - >"$ps1_tmp") <<'EOF' || exit 1
 ######## powerline-awk ##########
 # Author: Franck Jouvanceau
 # Powerline prompt with AWK (bash/zsh/ksh)
@@ -54,7 +54,7 @@ echo ok |base64 -w 0 >/dev/null 2>&1 && ps1_b64opt="-w0"
 
 function ps1_usershell {
     typeset shell=$(getent passwd "$1" 2>/dev/null)
-    echo ${shell##*:}
+    echo "${shell##*:}"
 }
 
 function ps1_bashinit {
@@ -111,22 +111,22 @@ function ps1_login {
         [ "$i" = "-e" ] && shift && exec=""
     done
     [ "$3" ] && profdir="$3"
-    [ -e "$profdir" ] && ! chmod 0711 $profdir 2>/dev/null && echo "Warning! not owner of $profdir" >&2 && profdir=$profdir.$$
-    (umask 0066;mkdir -p $profdir)
-    [[ $ps1_tmp != *.$USER ]] && cp -p $ps1_tmp.profile/.nerdrc $profdir 2>/dev/null
+    [ -e "$profdir" ] && ! chmod 0711 "$profdir" 2>/dev/null && echo "Warning! not owner of $profdir" >&2 && profdir=$profdir.$$
+    (umask 0066;mkdir -p "$profdir")
+    [[ $ps1_tmp != *.$USER ]] && cp -p "$ps1_tmp.profile/.nerdrc" "$profdir" 2>/dev/null
     typeset nerdps1="ps1_tmp=$ps1_tmp;export TMPDIR=$TMPDIR;. $ps1_tmp reload"
     typeset load_custom="[ -r '$profdir/.nerdrc' ] && . '$profdir/.nerdrc'"
     #[ "${1-$USER}" = "$USER" ] || cp -p ~/.nerdrc $profdir 2>/dev/null
-    [ "$ps1_user" ]  && [ "$ps1_user" != "$USER" ] && cp -p ~/.nerdrc $profdir 2>/dev/null
-    [ "$ps1_shell" ] || ps1_shell=$(ps1_usershell $1)
-    [ "$2" ] && [ -r "$2" ] && cp -p $2 $profdir/.nerdrc
+    [ "$ps1_user" ]  && [ "$ps1_user" != "$USER" ] && cp -p ~/.nerdrc "$profdir" 2>/dev/null
+    [ "$ps1_shell" ] || ps1_shell=$(ps1_usershell "$1")
+    [ "$2" ] && [ -r "$2" ] && cp -p "$2" "$profdir/.nerdrc"
     (umask 0022;(
         echo "_gprof=$gprofile;_uprof=$uprofile"
         echo "ps1_powerline='$ps1_powerline'"
         echo "ps1_info='$ps1_info'"
         echo "ps1_loaded=1"
     ) > "$profdir/.rc") || return 1
-    ln -s .rc $profdir/.zshrc 2>/dev/null
+    ln -s .rc "$profdir/.zshrc" 2>/dev/null
     case "$ps1_shell" in
         */*ksh) ps1_kshinit >>"$profdir/.rc"
              echo "ENV=$profdir/.rc $exec $ps1_shell -i";;
@@ -146,7 +146,7 @@ function ps1_get_mseconds
     typeset s __
     [ -r /proc/uptime ] && [ ! "$ps1_use_seconds" ] && {
         read s __ </proc/uptime
-        echo ${s/[.]/}
+        echo "${s/[.]/}"
     } || echo "${SECONDS}00"
 }
 
@@ -328,7 +328,7 @@ function ps1_git_branch {
 function ps1_userhost {
     typeset hostname
     hostname=$(uname -n)
-    echo $USER@${hostname%%.*}
+    echo "$USER@${hostname%%.*}"
 }
 
 function ps1_cwd {
@@ -379,7 +379,7 @@ function ps1_info {
     typeset infos i
     infos=$(eval echo \""$ps1_info_eval"\")
     # cannot use zsh ${=ps1_info_vars} as ksh error
-    [ "$ZSH_VERSION" ] && set -- $(echo $ps1_info_vars) || set -- $ps1_info_vars
+    [ "$ZSH_VERSION" ] && set -- $(echo "$ps1_info_vars") || set -- $ps1_info_vars
     for i in "$@" $ps1_info;do
         infos=$infos$(eval echo \"'|$'"$i"\")
     done
@@ -398,7 +398,7 @@ function ps1_freemem {
     [ -r /proc/meminfo ] && cmd='cat /proc/meminfo'
     [ ! "$cmd" ] && [ -r /var/run/dmesg.boot ] && cmd='grep avail.memory /var/run/dmesg.boot'
     [ ! "$cmd" ] && return
-    eval $cmd |$ps1_awk -v limits="$ps1_memlimits" '
+    eval "$cmd" |$ps1_awk -v limits="$ps1_memlimits" '
         /MemAvailable:/ { avail = $2 }
         /Buffer:|Cached:|MemFree:/ { free += $2 }
         /page size of/ { ps=$(NF-1) }
@@ -435,8 +435,8 @@ function ps1_loadavg {
     load=${load%% *}
     loadint=${load%.*}
     [ ! "$load" ] && return
-    [ $loadint -ge ${ps1_loadlimits#* } ] && echo "red///error:$load" && return
-    [ $loadint -ge ${ps1_loadlimits% *} ] && echo "yellow/black//warn:$load" && return
+    [ "$loadint" -ge "${ps1_loadlimits#* }" ] && echo "red///error:$load" && return
+    [ "$loadint" -ge "${ps1_loadlimits% *}" ] && echo "yellow/black//warn:$load" && return
     echo "green:$load"
 }
 
@@ -598,7 +598,7 @@ function ps1_sshcmd
 {
     typeset loginopts="$1" customenv="$2" nerdps1="$3" custom
     [ "$nerdps1" ] || nerdps1='$ps1_tmp'
-    [ -r $TMPDIR/.nerdps1.$USER.profile/.nerdrc ] && custom=$TMPDIR/.nerdps1.$USER.profile/.nerdrc
+    [ -r "$TMPDIR/.nerdps1.$USER.profile/.nerdrc" ] && custom=$TMPDIR/.nerdps1.$USER.profile/.nerdrc
     [ -r ~/.nerdrc ] && custom=~/.nerdrc
     [ "$customenv" ] && custom=$customenv
     printf "%s" "
@@ -608,7 +608,7 @@ function ps1_sshcmd
         ps1_tmp=\$TMPDIR/.nerdps1.\$USER
         [ -e \$ps1_tmp ] && ! chmod 0644 \$ps1_tmp 2>/dev/null && echo \"Warning! not owner of \$ps1_tmp.\" >&2 && ps1_tmp=\$ps1_tmp.\$\$
         (umask 0022;cat - >\$ps1_tmp) <<'EOF$$' || exit 1
-$(cat $ps1_tmp)
+$(cat "$ps1_tmp")
 EOF$$
         profdir=\$ps1_tmp.profile
         [ -e \$profdir ] && ! chmod 0711 \$profdir 2>/dev/null && echo \"Warning! not owner of \$profdir\" >&2 && profdir=\$profdir.$$
@@ -644,7 +644,7 @@ function pssh
         1|raw) ssh -t "$remote" "$@" "$(ps1_sshcmd "$loginopts" "$customenv")";;
         2|b64) ssh -t "$remote" "$@" ". <(echo $(ps1_sshcmd "$loginopts" "$customenv"| gzip -c| base64 $ps1_b64opt) |base64 -d|gzip -dc)";;
         3|cfg) ps1_pssh3 "$remote" "$loginopts" "$customenv" "$@";;
-        4|url) ssh -t $remote "$@" "$(ps1_sshcmd "$loginopts" "$customenv" "<(curl -Ls -m 6 $ps1_url)")";;
+        4|url) ssh -t "$remote" "$@" "$(ps1_sshcmd "$loginopts" "$customenv" "<(curl -Ls -m 6 $ps1_url)")";;
     esac
 }
 
@@ -655,21 +655,21 @@ psshu() { pssh --url "$@"; }
 function ps1_pssh3 {
     typeset remote="$1" loginopts="$2" customenv="$3" ssh_config=$TMPDIR/.nerdps1.$USER.ssh argf=false
     shift 3
-    (umask 077;echo "RemoteCommand . <(echo $(ps1_sshcmd "$loginopts" "$customenv"| gzip -c| base64 $ps1_b64opt) |base64 -d|gzip -dc)" >$ssh_config) || return 1
+    (umask 077;echo "RemoteCommand . <(echo $(ps1_sshcmd "$loginopts" "$customenv"| gzip -c| base64 $ps1_b64opt) |base64 -d|gzip -dc)" >"$ssh_config") || return 1
     # include ssh config if -F ssh option
     for arg in "$@";do
        shift
        [ "$arg" = -F ] && argf=true && continue
        $argf && argf=false && sshc=$arg && continue
        [[ "$arg" == -F* ]] && sshc=${arg#-F} && continue
-       set -- "$@" $arg
+       set -- "$@" "$arg"
     done
     [ "$sshc" ] && {
-        [ -r "$sshc" ] && cat "$sshc" >>$ssh_config 2>/dev/null
+        [ -r "$sshc" ] && cat "$sshc" >>"$ssh_config" 2>/dev/null
     } || { # add user ssh config if no -F option
-        [ -r ~/.ssh/config ] && cat ~/.ssh/config >>$ssh_config
+        [ -r ~/.ssh/config ] && cat ~/.ssh/config >>"$ssh_config"
     }
-    ssh -t "$remote" -F $ssh_config "$@"
+    ssh -t "$remote" -F "$ssh_config" "$@"
 }
 
 
@@ -693,5 +693,5 @@ return 0
 EOF
 
 unset ps1_loaded
-. $ps1_tmp "$@"
+. "$ps1_tmp" "$@"
 :
