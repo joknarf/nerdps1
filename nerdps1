@@ -335,7 +335,7 @@ function ps1_cwd {
     typeset spwd cols
     spwd=$PWD
     cols=${COLUMNS:-80}
-    case "$PWD" in $HOME|$HOME/*) spwd="~${PWD#$HOME}";; esac
+    case "$PWD" in "$HOME"|"$HOME"/*) spwd="~${PWD#"$HOME"}";; esac
     [ ${#spwd} -gt $(($cols-30)) ] && spwd="${spwd:0:7}...${spwd:$((${#spwd}-$cols-40))}"
     echo "$spwd"
 }
