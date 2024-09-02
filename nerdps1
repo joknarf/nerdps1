@@ -642,7 +642,7 @@ function pssh
     [ "$1" ] && [ -r "$1" ] && customenv=$1 && shift
     case "$sshmode" in
         1|raw) ssh -t "$remote" "$@" "$(ps1_sshcmd "$loginopts" "$customenv")";;
-        2|b64) ssh -t "$remote" "$@" ". <(echo $(ps1_sshcmd "$loginopts" "$customenv"| gzip -c| base64 "$ps1_b64opt") |base64 -d|gzip -dc)";;
+        2|b64) ssh -t "$remote" "$@" ". <(echo $(ps1_sshcmd "$loginopts" "$customenv"| gzip -c| base64 $ps1_b64opt) |base64 -d|gzip -dc)";;
         3|cfg) ps1_pssh3 "$remote" "$loginopts" "$customenv" "$@";;
         4|url) ssh -t "$remote" "$@" "$(ps1_sshcmd "$loginopts" "$customenv" "<(curl -Ls -m 6 $ps1_url)")";;
     esac
@@ -655,7 +655,7 @@ psshu() { pssh --url "$@"; }
 function ps1_pssh3 {
     typeset remote="$1" loginopts="$2" customenv="$3" ssh_config=$TMPDIR/.nerdps1.$USER.ssh argf=false
     shift 3
-    (umask 077;echo "RemoteCommand . <(echo $(ps1_sshcmd "$loginopts" "$customenv"| gzip -c| base64 "$ps1_b64opt") |base64 -d|gzip -dc)" >"$ssh_config") || return 1
+    (umask 077;echo "RemoteCommand . <(echo $(ps1_sshcmd "$loginopts" "$customenv"| gzip -c| base64 $ps1_b64opt) |base64 -d|gzip -dc)" >"$ssh_config") || return 1
     # include ssh config if -F ssh option
     for arg in "$@";do
        shift
