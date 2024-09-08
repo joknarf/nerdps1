@@ -158,20 +158,17 @@ function ps1_time_cmd
     return 0
 }
 
-function ps1_elapse
+function ps1_calc_elapse
 {
     typeset seconds h m s end ms=0
-    : "${__ps1_sec:=-1}"
-    [ "$__ps1_sec" = -1 ] && return
-    [ "$__ps1_noexec" ] && return
+
     end=$(ps1_get_mseconds)
     seconds=$(($end - $__ps1_sec))
     ms=$(($seconds%100))
     seconds=$((seconds/100))
-    #round=$(printf '%.0f' $seconds.$ms)
     [ $seconds = 0 ] && return
     [ $seconds -lt 60 ] && {
-        [ "$ms" = 0 ] && echo "${seconds}s" || printf '%d.%02ds' $seconds $ms
+        [ "$ms" = 0 ] && printf "%ss" "$seconds" || printf '%d.%02ds' "$seconds" "$ms"
         return
     }
     m=$((seconds%3600/60))
@@ -179,6 +176,13 @@ function ps1_elapse
     [ $seconds -lt 3600 ] && printf "%dm%02ds" $m $s && return
     h=$((seconds/3600))
     printf "%dh%02dm%02ds" $h $m $s && return
+}
+
+function ps1_elapse
+{
+    : "${__ps1_sec:=-1}"
+    [ "$__ps1_sec" = -1 ] && return
+    ps1_calc_elapse
 }
 
 function ps1_pwline {
@@ -371,7 +375,14 @@ function ps1_preexec {
 
 # zsh
 function ps1_precmd {
-    [ "$__ps1_preexec" ] && unset __ps1_noexec || __ps1_noexec=1
+    __ps1_clock=$(print -P %T)
+    [ "$__ps1_preexec" ] && {
+        unset __ps1_noexec
+        __ps1_elapse=$(ps1_calc_elapse)
+    } || {
+        __ps1_noexec=1
+        unset __ps1_elapse
+    }
     unset __ps1_preexec
 }
 
@@ -475,9 +486,10 @@ function ps1_prompt {
             prompt = "%(!.#.$)"
             pre = "%{\033]0;%m\007"
             post = "%}"
+            cmd["elapse"] = "$__ps1_elapse"
             cmd["exit_status"] = "$(ps1_exit_status $?)"
             cmd["userhost"] = "$(print -P %n@%m)"
-            cmd["time"] = "$(print -P %T)"
+            cmd["time"] = "$__ps1_clock"
             cmd["prompt"] = "%(!.#.$)"
         } else {
             pre="\033]0;$ps1_hostname\007"
