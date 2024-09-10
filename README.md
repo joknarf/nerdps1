@@ -1,25 +1,28 @@
 # nerdps1
-Nerd prompt for bash/ksh/zsh (mksh/ash)
+Transportable Nerd prompt for bash/ksh/zsh (mksh/ash)
 
-## activate the prompt
+## Font for prompt
 
-For better experience, install Nerd font on your system/console (Windows console / Windows terminal / putty / git-bash / CmdEr / iTerm2 / Terminator / MobaXterm / VScode terminal / Pycharm terminal...):  
+For better experience, install a Nerd font on your system/console (Windows console / Windows terminal / putty / git-bash / CmdEr / iTerm2 / Terminator / MobaXterm / VScode terminal / Pycharm terminal...):  
 [Consolas NF](https://github.com/wclr/my-nerd-fonts/raw/master/Consolas%20NF/Consolas%20Nerd%20Font%20Complete%20Mono%20Windows%20Compatible.ttf)  
 [Nerd Fonts](https://www.nerdfonts.com/)
 
 on Unix, copy to `~/.fonts` and run `fc-cache -fv` then relaunch your terminal and set the font
 
-Then activate the nerdps1 prompt:
-```shell
-$ . <(curl -s https://raw.githubusercontent.com/joknarf/nerdps1/main/nerdps1)
-```
+## Installation
 
-<img width="900" alt="image" src="https://github.com/joknarf/nerdps1/assets/10117818/ebc3f680-69b1-45d2-b1ce-b09b09b545f2">
+* You can install using a plugin manager like sheldon / zgenom ... : plugin joknarf/nerdps1
 
-You can get your local copy using:  
+* Or you can activate the nerdps1 prompt directly using:  
+`$ . <(curl -s https://raw.githubusercontent.com/joknarf/nerdps1/main/nerdps1)`
+* Or you can get your local copy using:  
 `$ curl -sL -o ~/nerdps1 https://raw.githubusercontent.com/joknarf/nerdps1/main/nerdps1`  
 then source it in your profile/rcfile:  
 `. ~/nerdps1`
+
+
+<img width="900" alt="image" src="https://github.com/joknarf/nerdps1/assets/10117818/ebc3f680-69b1-45d2-b1ce-b09b09b545f2">
+
 
 Following information displayed:
 * exit code if command returns code is not 0
