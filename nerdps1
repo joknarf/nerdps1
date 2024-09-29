@@ -147,7 +147,10 @@ function ps1_get_mseconds
     [ -r /proc/uptime ] && [ ! "$ps1_use_seconds" ] && {
         read -r s __ </proc/uptime
         echo "${s/[.]/}"
-    } || echo "${SECONDS}00"
+        return
+    }
+    s=$(LANG=C; echo "$SECONDS")
+    [[ "$s" = *.??? ]] && s="${s/[.]/}" && echo "${s%?}" || echo "${s}00"
 }
 
 function ps1_time_cmd
