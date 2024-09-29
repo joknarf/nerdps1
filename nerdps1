@@ -494,7 +494,7 @@ function ps1_prompt {
         } else {
             pre="\033]0;$ps1_hostname\007"
             prompt="$(ps1_uidprompt)"
-            post="${_:$((__ps1_cmd=$HISTCMD, __ps1_sec=-1, 0)):0}"
+            post="${_:$((__ps1_cmd=$HISTCMD , __ps1_sec=-1 , 0)):0}"
             if (ash||mksh) post=""
             cmd["exit_status"] = "$(ps1_exit_status $? $HISTCMD)"
             cmd["time"] = "$(date +%H:%M)"
