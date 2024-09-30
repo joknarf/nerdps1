@@ -49,7 +49,7 @@ ps1_pfstyle="/auto:exit_status /lblack:elapse /blue:userhost >/auto:git_branch >
 type typeset >/dev/null 2>&1 || alias typeset=local # ash
 [ -x /bin/nawk ] && ps1_awk=nawk || ps1_awk=awk
 echo ok |base64 -w 0 >/dev/null 2>&1 && ps1_b64opt="-w0"
-
+typeset -F SECONDS
 #=========
 
 function ps1_usershell {
@@ -143,14 +143,18 @@ function ps1_login {
 
 function ps1_get_mseconds
 {
-    typeset s __
+    typeset s ms __
     [ -r /proc/uptime ] && [ ! "$ps1_use_seconds" ] && {
         read -r s __ </proc/uptime
         echo "${s/[.]/}"
         return
     }
     s=$(LANG=C; echo "$SECONDS")
-    [[ "$s" = *.??? ]] && s="${s/[.]/}" && echo "${s%?}" || echo "${s}00"
+    ms="${s#*.}" 
+    [ "$ms" = "$s" ] && ms="00"
+    ms="${ms:0:2}"
+    s="${s%.*}"
+    echo "$s$ms"
 }
 
 function ps1_time_cmd
