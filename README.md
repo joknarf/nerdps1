@@ -14,9 +14,9 @@ on Unix, copy to `~/.fonts` and run `fc-cache -fv` then relaunch your terminal a
 * You can install using a plugin manager like sheldon / zgenom ... : plugin joknarf/nerdps1
 
 * Or you can activate the nerdps1 prompt directly using:  
-`$ . <(curl -s https://raw.githubusercontent.com/joknarf/nerdps1/main/nerdps1)`
+`$ . <(curl -s 'https://raw.githubusercontent.com/joknarf/nerdps1/main/nerdps1')`
 * Or you can get your local copy using:  
-`$ curl -sL -o ~/nerdps1 https://raw.githubusercontent.com/joknarf/nerdps1/main/nerdps1`  
+`$ curl -sL -o ~/nerdps1 'https://raw.githubusercontent.com/joknarf/nerdps1/main/nerdps1'`  
 then source it in your profile/rcfile:  
 `. ~/nerdps1`
 
