@@ -1,6 +1,8 @@
 # nerdps1
 Transportable Nerd prompt for bash/ksh/zsh (mksh/ash)
 
+*New: you can now use [thefly](https://github.com/joknarf/thefly) to teleport all you shell env/plugins*
+
 ## Font for prompt
 
 For better experience, install a Nerd font on your system/console (Windows console / Windows terminal / putty / git-bash / CmdEr / iTerm2 / Terminator / MobaXterm / VScode terminal / Pycharm terminal...):  
