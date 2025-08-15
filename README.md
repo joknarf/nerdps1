@@ -1,7 +1,8 @@
 # nerdps1
 Transportable Nerd prompt for bash/ksh/zsh (mksh/ash)
 
-*New: you can now use [thefly](https://github.com/joknarf/thefly) to teleport all you shell env/plugins*
+*New: you should now use [joknarf/thefly](https://github.com/joknarf/thefly) plugin manager with plugin [joknarf/nerdp](https://github.com/joknarf/nerdp) which is better implementation and can teleport all you shell environment/plugins*  
+see also: [joknarf/shell-ng](https://github.com/joknarf/shell-ng) plugins compilation which includes nerdp
 
 ## Font for prompt
 
